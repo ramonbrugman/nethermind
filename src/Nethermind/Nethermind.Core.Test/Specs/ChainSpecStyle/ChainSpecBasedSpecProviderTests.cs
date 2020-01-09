@@ -75,6 +75,7 @@ namespace Nethermind.Core.Test.Specs.ChainSpecStyle
                 object a = propertyInfo.GetValue(oldSpec);
                 object b = propertyInfo.GetValue(newSpec);
 
+                
                 Assert.AreEqual(a, b, propertyInfo.Name);
             }
         }
