@@ -19,6 +19,7 @@ ToC
    cloud
    known_issues
    runtime
+   synchronization
    networks
    private_networks
    configuration
