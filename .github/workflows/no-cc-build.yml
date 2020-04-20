@@ -25,7 +25,7 @@ jobs:
       run: brew install gmp && brew install snappy && brew install lz4 && brew install zstd
     - name: Tests
       run: |
-        dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Nethermind.sln
+        dotnet test -c Release src/Nethermind/Nethermind.sln
   eth-tests:
     name: Ethereum Tests
     runs-on: ${{ matrix.os }}
@@ -40,7 +40,7 @@ jobs:
       run: git -c submodule."src/eth2.0-spec-tests".update=none submodule update --init
     - name: Tests
       run: |
-        dotnet test -c Release src/Nethermind/EthereumTests.sln
+        dotnet test -c Release src/Nethermind/EthereumTests.sln --logger GitHubActions
 #  eth2-tests:
 #    name: Ethereum 2.0 Tests
 #    runs-on: ${{ matrix.os }}
