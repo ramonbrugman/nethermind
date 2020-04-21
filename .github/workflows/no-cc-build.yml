@@ -43,12 +43,14 @@ jobs:
       run: git -c submodule."src/eth2.0-spec-tests".update=none submodule update --init
     - name: Running tests
       run: |
-        dotnet test -c Release src/Nethermind/EthereumTests.sln --logger "html"
+        cd src/Nethermind
+        mkdir results
+        dotnet test -c Release EthereumTests.sln --logger "html" -r results/
     - uses: actions/upload-artifact@v2-preview
       name: Uploading reports
       with:
         name: reports
-        path: src/Nethermind/Ethereum.*/TestResults/*
+        path: src/Nethermind/results/
 
 #  eth2-tests:
 #    name: Ethereum 2.0 Tests
