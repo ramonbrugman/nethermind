@@ -41,6 +41,12 @@ jobs:
       run: git fetch --unshallow
     - name: Updating submodules
       run: git -c submodule."src/eth2.0-spec-tests".update=none submodule update --init
+    - name: Installing Linux packages
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install nuget pwgen
+        nuget install extent
     - name: Running tests
       run: |
         dotnet test -c Release src/Nethermind/EthereumTests.sln --logger "nunit"
