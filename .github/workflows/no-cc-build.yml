@@ -41,27 +41,14 @@ jobs:
       run: git fetch --unshallow
     - name: Updating submodules
       run: git -c submodule."src/eth2.0-spec-tests".update=none submodule update --init
-    - name: Installing Linux packages
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install nuget pwgen
-        nuget install extent
     - name: Running tests
       run: |
-        dotnet test -c Release src/Nethermind/EthereumTests.sln --logger "nunit"
-    - name: Merging reports
-      run: |
-        cd src/Nethermind/
-        mkdir results
-        nuget install extent
-        mono extent.0.0.3/tools/extent.exe -i Ethereum.Basic.Test/TestResults/TestResults.xml -o results/Ethereum.Basic.Test/
-        mono extent.0.0.3/tools/extent.exe -i Ethereum.Blockchain.Test/TestResults/TestResults.xml -o results/Ethereum.Blockchain.Test/
+        dotnet test -c Release src/Nethermind/EthereumTests.sln --logger "html"
     - uses: actions/upload-artifact@v2-preview
       name: Uploading reports
       with:
         name: reports
-        path: src/Nethermind/results/
+        path: src/Nethermind/Ethereum.*/TestResults/*
 
 #  eth2-tests:
 #    name: Ethereum 2.0 Tests
