@@ -20,6 +20,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install libsnappy-dev libc6-dev libc6
+        sudo apt-get install nuget
+        nuget install extent
     - name: Installing macOS packages
       if: matrix.os == 'macOS'
       run: brew install gmp && brew install snappy && brew install lz4 && brew install zstd
@@ -31,16 +33,24 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS]
+        #os: [ubuntu-latest, windows-latest, macOS]
+        os: ['ubuntu-latest']
     steps:
     - uses: actions/checkout@v2
     - name: Unshallow fetching
       run: git fetch --unshallow
     - name: Updating submodules
       run: git -c submodule."src/eth2.0-spec-tests".update=none submodule update --init
-    - name: Tests
+    - name: Running tests
       run: |
-        dotnet test -c Release src/Nethermind/EthereumTests.sln --logger GitHubActions
+        dotnet test -c Release src/Nethermind/EthereumTests.sln --logger "nunit"
+    - name: Merging reports
+      run: |
+        cd src/Nethermind/
+        mkdir results
+        for f in Ethereum.*/TestResults; do mv $f/TestResults.xml results/$(pwgen 4 1)-TestResults.xml; done
+        nuget install extent
+        mono extent.0.0.3/tools/extent.exe -d results/ -o results/ --merge
 #  eth2-tests:
 #    name: Ethereum 2.0 Tests
 #    runs-on: ${{ matrix.os }}
