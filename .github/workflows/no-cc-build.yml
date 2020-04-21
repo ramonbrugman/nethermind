@@ -20,7 +20,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install libsnappy-dev libc6-dev libc6
-        sudo apt-get install nuget
+        sudo apt-get install nuget pwgen
         nuget install extent
     - name: Installing macOS packages
       if: matrix.os == 'macOS'
