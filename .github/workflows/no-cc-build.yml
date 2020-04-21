@@ -54,9 +54,15 @@ jobs:
       run: |
         cd src/Nethermind/
         mkdir results
-        for f in Ethereum.*/TestResults; do mv $f/TestResults.xml results/$(pwgen 4 1)-TestResults.xml; done
         nuget install extent
-        mono extent.0.0.3/tools/extent.exe -d results/ -o results/ --merge
+        mono extent.0.0.3/tools/extent.exe -i Ethereum.Basic.Test/TestResults/TestResults.xml -o results/Ethereum.Basic.Test/
+        mono extent.0.0.3/tools/extent.exe -i Ethereum.Blockchain.Test/TestResults/TestResults.xml -o results/Ethereum.Blockchain.Test/
+    - uses: actions/upload-artifact@v2-preview
+      name: Uploading reports
+      with:
+        name: reports
+        path: src/Nethermind/results/
+
 #  eth2-tests:
 #    name: Ethereum 2.0 Tests
 #    runs-on: ${{ matrix.os }}
