@@ -14,6 +14,10 @@
 //  You should have received a copy of the GNU Lesser General Public License
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 
+using System;
+using System.Diagnostics;
+using System.Reflection;
+using Nethermind.Logging;
 using NUnit.Framework;
 
 namespace Nethermind.Core.Test
@@ -27,6 +31,13 @@ namespace Nethermind.Core.Test
             Assert.AreEqual(Unit.Ether, Unit.Finney * 1000);
             Assert.AreEqual(Unit.Ether, Unit.Szabo * 1000 * 1000);
             Assert.AreEqual(Unit.Ether, Unit.Wei * 1000 * 1000 * 1000 * 1000 * 1000 * 1000);
+        }
+
+        [Test]
+        public void PathTest()
+        {
+            var process = Process.GetCurrentProcess();
+            throw new Exception($"Name: {process.ProcessName}, Module: {process.MainModule.FileName}, Assembly: {Assembly.GetExecutingAssembly().Location}.");
         }
     }
 }
