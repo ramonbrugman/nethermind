@@ -153,16 +153,16 @@ namespace Nethermind.Network.Test.Discovery
             //Thread.Sleep(100);
 
             //3th node should survive, 4th node should be active but not in the table
-            Assert.That(() => candidateManager.State, Is.EqualTo(NodeLifecycleState.ActiveExcluded).After(100, 50));
-            Assert.That(() => evictionCandidate.State, Is.EqualTo(NodeLifecycleState.Active).After(100, 50));
+            Assert.That(() => candidateManager.State, Is.EqualTo(NodeLifecycleState.ActiveExcluded).After(200, 50));
+            Assert.That(() => evictionCandidate.State, Is.EqualTo(NodeLifecycleState.Active).After(200, 50));
 
             //Assert.AreEqual(NodeLifecycleState.ActiveExcluded, candidateManager.State);
             //Assert.AreEqual(NodeLifecycleState.Active, evictionCandidate.State);
             closestNodes = _nodeTable.GetClosestNodes();
-            Assert.That(() => closestNodes.Count(x => x.Host == managers[0].ManagedNode.Host) == 1, Is.True.After(100, 50));
-            Assert.That(() => closestNodes.Count(x => x.Host == managers[1].ManagedNode.Host) == 1, Is.True.After(100, 50));
-            Assert.That(() => closestNodes.Count(x => x.Host == managers[2].ManagedNode.Host) == 1, Is.True.After(100, 50));
-            Assert.That(() => closestNodes.Count(x => x.Host == candidateNode.Host) == 0, Is.True.After(100, 50));
+            Assert.That(() => closestNodes.Count(x => x.Host == managers[0].ManagedNode.Host) == 1, Is.True.After(200, 50));
+            Assert.That(() => closestNodes.Count(x => x.Host == managers[1].ManagedNode.Host) == 1, Is.True.After(200, 50));
+            Assert.That(() => closestNodes.Count(x => x.Host == managers[2].ManagedNode.Host) == 1, Is.True.After(200, 50));
+            Assert.That(() => closestNodes.Count(x => x.Host == candidateNode.Host) == 0, Is.True.After(200, 50));
             
             //Assert.IsTrue(closestNodes.Count(x => x.Host == managers[0].ManagedNode.Host) == 1);
             //Assert.IsTrue(closestNodes.Count(x => x.Host == managers[1].ManagedNode.Host) == 1);
