@@ -25,19 +25,7 @@ namespace Nethermind.Specs.ChainSpecStyle
     {
         public static ChainSpec LoadFromFile(this IChainSpecLoader chainSpecLoader, string filePath)
         {
-            string originalFilePath = filePath;
-            filePath = originalFilePath.GetApplicationResourcePath();
-            
-            if (!File.Exists(filePath))
-            {
-                var secondaryFilePath = originalFilePath.GetApplicationResourcePath(type: PathUtils.PathType.Assembly);
-                
-                if (File.Exists(secondaryFilePath))
-                {
-                    filePath = secondaryFilePath;
-                }
-            }
-            
+            filePath = filePath.GetApplicationResourcePath();
             if (!File.Exists(filePath))
             {
                 StringBuilder missingChainspecFileMessage = new StringBuilder($"Chainspec file does not exist {filePath}");
