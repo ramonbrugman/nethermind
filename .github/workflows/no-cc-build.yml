@@ -14,7 +14,7 @@ jobs:
     - name: Unshallow fetching
       run: git fetch --unshallow --progress --prune origin +refs/heads/*:refs/remotes/origin/*
     - name: Updating submodules
-      run: git submodule update --init src/Dirichlet src/rocksdb-sharp
+      run: git -c submodule."src/eth2.0-spec-tests".update=none submodule update --init
     - name: Installing Linux packages
       if: matrix.os == 'ubuntu-latest'
       run: |
