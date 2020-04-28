@@ -25,11 +25,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nethermind.Db", "Nethermind
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nethermind.Network", "Nethermind.Network\Nethermind.Network.csproj", "{0997F167-C2C4-4F17-99A6-AB1676827DC5}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nethermind.KeyStore", "Nethermind.KeyStore\Nethermind.KeyStore.csproj", "{31AFB372-BE97-4804-B2B9-AD4C515924B6}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nethermind.JsonRpc", "Nethermind.JsonRpc\Nethermind.JsonRpc.csproj", "{53D62515-72D1-4DEA-BC60-71BCC9C928E3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nethermind.Network.Test", "Nethermind.Network.Test\Nethermind.Network.Test.csproj", "{F6FDB712-1670-4B62-B341-EC6804815991}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nethermind.JsonRpc.Test", "Nethermind.JsonRpc.Test\Nethermind.JsonRpc.Test.csproj", "{E9B7F7DC-7FE0-4EAC-B1C4-C9592B266A2A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nethermind.KeyStore.Test", "Nethermind.KeyStore.Test\Nethermind.KeyStore.Test.csproj", "{2CE2C804-40B6-4ECA-AF81-556041FA03C6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nethermind.PerfTest", "Nethermind.PerfTest\Nethermind.PerfTest.csproj", "{7798EC58-E66C-4C77-999E-4A0AD2321F4E}"
 EndProject
