@@ -110,7 +110,7 @@ namespace Nethermind.Network.Test.Discovery
 
             //Thread.Sleep(500);
 
-            Assert.That(() => manager.State, Is.EqualTo(NodeLifecycleState.Unreachable).After(500, 50));
+            Assert.That(() => manager.State, Is.EqualTo(NodeLifecycleState.Unreachable).After(1000, 50));
             //Assert.AreEqual(NodeLifecycleState.Unreachable, manager.State);
         }
 
