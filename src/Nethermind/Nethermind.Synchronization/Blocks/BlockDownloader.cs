@@ -137,7 +137,7 @@ namespace Nethermind.Synchronization.Blocks
                     break;
                 }
 
-                if (_logger.IsWarn) _logger.Warn($"Headers request {currentNumber}+{headersToRequest} to peer {bestPeer} with {bestPeer.HeadNumber} blocks. Got {currentNumber} and asking for {headersToRequest} more.");
+                if (_logger.IsDebug) _logger.Debug($"Headers request {currentNumber}+{headersToRequest} to peer {bestPeer} with {bestPeer.HeadNumber} blocks. Got {currentNumber} and asking for {headersToRequest} more.");
                 BlockHeader[] headers = await RequestHeaders(bestPeer, cancellation, currentNumber, headersToRequest);
 
                 BlockHeader startingPoint = headers[0] == null ? null : _blockTree.FindHeader(headers[0].Hash, BlockTreeLookupOptions.TotalDifficultyNotNeeded);
@@ -178,7 +178,7 @@ namespace Nethermind.Synchronization.Blocks
                             break;
                         }
 
-                        SyncPeerPool.ReportNoSyncProgress(bestPeer);
+                        SyncPeerPool.ReportNoSyncProgress(bestPeer, AllocationContexts.Blocks);
                         return 0;
                     }
 
@@ -346,26 +346,16 @@ namespace Nethermind.Synchronization.Blocks
             if (downloadTask.IsFaulted)
             {
                 _sinceLastTimeout = 0;
-                if (downloadTask.Exception?.InnerException is TimeoutException
-                    || (downloadTask.Exception?.InnerExceptions.Any(x => x is TimeoutException) ?? false)
-                    || (downloadTask.Exception?.InnerExceptions.Any(x => x.InnerException is TimeoutException) ?? false))
+                if (downloadTask.Exception?.Flatten().InnerExceptions.Any(x => x is TimeoutException) ?? false)
                 {
                     if (_logger.IsTrace) _logger.Error($"Failed to retrieve {entities} when synchronizing (Timeout)", downloadTask.Exception);
                     _syncBatchSize.Shrink();
                 }
-                else
+
+                if (downloadTask.Exception != null)
                 {
-                    Exception exception = downloadTask.Exception;
-                    AggregateException aggregateException = exception as AggregateException;
-                    if (aggregateException != null)
-                    {
-                        exception = aggregateException.Flatten().InnerExceptions[0];
-                    }
-
-                    if (_logger.IsInfo) _logger.Error($"Failed to retrieve {entities} when synchronizing.", exception);
+                    _ = downloadTask.Result; // trying to throw with stack trace
                 }
-
-                throw new EthSyncException($"{entities} task faulted", downloadTask.Exception);
             }
 
             return default;
@@ -502,9 +492,9 @@ namespace Nethermind.Synchronization.Blocks
             {
                 if (header.TotalDifficulty != null && header.TotalDifficulty > peerInfo.TotalDifficulty)
                 {
-                    peerInfo.TotalDifficulty = header.TotalDifficulty.Value;
-                    peerInfo.TotalDifficulty = header.TotalDifficulty.Value;
-                    peerInfo.TotalDifficulty = header.TotalDifficulty.Value;
+                    peerInfo.SyncPeer.TotalDifficulty = header.TotalDifficulty.Value;
+                    peerInfo.SyncPeer.HeadNumber = header.Number;
+                    peerInfo.SyncPeer.HeadHash = header.Hash;
                 }
             }
 
@@ -564,7 +554,7 @@ namespace Nethermind.Synchronization.Blocks
                     }
                     else
                     {
-                        if (_logger.IsDebug) _logger.Error($"DEBUG/ERROR Block download from with {peerInfo} failed. {t.Exception}");
+                        if (_logger.IsDebug) _logger.Error($"DEBUG/ERROR Block download from {peerInfo} failed. {t.Exception}");
                         reason = "sync fault";
                     }
 
@@ -610,7 +600,6 @@ namespace Nethermind.Synchronization.Blocks
             
             allocation.Cancelled += AllocationOnCancelled;
             allocation.Replaced += AllocationOnReplaced;
-            allocation.Refreshed += AllocationOnRefreshed;
             return allocation;
         }
 
@@ -618,7 +607,6 @@ namespace Nethermind.Synchronization.Blocks
         {
             allocation.Cancelled -= AllocationOnCancelled;
             allocation.Replaced -= AllocationOnReplaced;
-            allocation.Refreshed -= AllocationOnRefreshed;
             base.Free(allocation);
         }
 
@@ -632,12 +620,7 @@ namespace Nethermind.Synchronization.Blocks
             
             allocationWithCancellation.Cancel();
         }
-
-        private void AllocationOnRefreshed(object sender, EventArgs e)
-        {
-            Feed.Activate();
-        }
-
+        
         private void AllocationOnReplaced(object sender, AllocationChangeEventArgs e)
         {
             if (e.Previous == null)

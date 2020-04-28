@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Threading;
+using Nethermind.Abi;
 using Nethermind.Blockchain;
 using Nethermind.Blockchain.Processing;
 using Nethermind.Blockchain.Receipts;
@@ -53,6 +54,7 @@ using Nethermind.Store;
 using Nethermind.Store.Bloom;
 using Nethermind.Synchronization;
 using Nethermind.Synchronization.BeamSync;
+using Nethermind.Synchronization.FastSync;
 using Nethermind.Synchronization.ParallelSync;
 using Nethermind.Synchronization.Peers;
 using Nethermind.TxPool;
@@ -72,6 +74,9 @@ namespace Nethermind.Runner.Ethereum.Context
         {
             ConfigProvider = configProvider;
             LogManager = logManager;
+            
+            CryptoRandom = new CryptoRandom();
+            DisposeStack.Push(CryptoRandom);
         }
         
         public IFileSystem FileSystem { get; set; } = new FileSystem();
@@ -80,12 +85,11 @@ namespace Nethermind.Runner.Ethereum.Context
         public DisposableStack DisposeStack { get; } = new DisposableStack();
         public List<IProducer> Producers { get; }= new List<IProducer>();
         public IGrpcServer? GrpcServer { get; set; }
-        public INodeDataConsumer NodeDataConsumer { get; set; } = NullDataConsumer.Instance;
         public IRpcModuleProvider? RpcModuleProvider { get; set; }
         public IIPResolver? IpResolver { get; set; }
         public PrivateKey? NodeKey { get; set; }
         public ChainSpec? ChainSpec { get; set; }
-        public ICryptoRandom CryptoRandom { get; } = new CryptoRandom();
+        public ICryptoRandom CryptoRandom { get; }
         public IJsonSerializer? EthereumJsonSerializer { get; set; }
         public CancellationTokenSource? RunnerCancellation { get; set; }
         public IBlockchainProcessor? BlockchainProcessor { get; set; }
@@ -136,5 +140,6 @@ namespace Nethermind.Runner.Ethereum.Context
         public INdmDataPublisher? NdmDataPublisher { get; set; }
         public INdmInitializer? NdmInitializer { get; set; }
         public IBloomStorage? BloomStorage { get; set; }
+        public AbiEncoder AbiEncoder { get; } = new AbiEncoder();
     }
 }
