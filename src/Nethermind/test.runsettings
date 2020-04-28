@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- Configurations that affect the Test Framework -->
+  <RunConfiguration>
+    <!-- Path relative to solution directory -->
+    <!-- <ResultsDirectory>.\TestResults</ResultsDirectory> -->
+    <!-- [x86] | x64 | You can also change it from menu Test, Test Settings, Default Processor Architecture -->
+    <!-- <TargetPlatform>x86</TargetPlatform> -->
+  </RunConfiguration>
+
+  <!-- Parameters used by tests at runtime -->
+  <TestRunParameters>
+  </TestRunParameters>
+
+  <!-- Adapter Specific sections -->
+  <NUnit>
+    <!-- <BasePath>D:\Dev\NUnit\nunit3-vs-adapter\demo\NUnitTestDemo\bin\Release</BasePath>
+    <PrivateBinPath>extras;more.extras</PrivateBinPath>
+    <DefaultTimeout>5000</DefaultTimeout>
+    <WorkDirectory>work</WorkDirectory>
+    <InternalTraceLevel>Info</InternalTraceLevel>
+    <RandomSeed>1234567</RandomSeed> -->
+	<NumberOfTestWorkers>16</NumberOfTestWorkers>
+  </NUnit>
+
+</RunSettings>
