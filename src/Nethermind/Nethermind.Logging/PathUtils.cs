@@ -23,21 +23,21 @@ namespace Nethermind.Logging
 {
     public static class PathUtils
     {
+        public static string AssemblyDirectory { get; }
+        
+        public static string MainModuleDirectory { get; }
+        
         public static string ExecutingDirectory { get; }
 
         static PathUtils()
         {
             var process = Process.GetCurrentProcess();
-            if (process.ProcessName.StartsWith("dotnet", StringComparison.InvariantCultureIgnoreCase))
-            {
-                ExecutingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                return;
-            }
-
-            ExecutingDirectory = Path.GetDirectoryName(process.MainModule.FileName);
+            AssemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            MainModuleDirectory = Path.GetDirectoryName(process.MainModule.FileName);
+            ExecutingDirectory = process.ProcessName.StartsWith("dotnet", StringComparison.InvariantCultureIgnoreCase) ? AssemblyDirectory : MainModuleDirectory;
         }
 
-        public static string GetApplicationResourcePath(this string resourcePath, string overridePrefixPath = null)
+        public static string GetApplicationResourcePath(this string resourcePath, string overridePrefixPath = null, PathType type = PathType.Default)
         {
             if (string.IsNullOrWhiteSpace(resourcePath))
             {
@@ -49,14 +49,36 @@ namespace Nethermind.Logging
                 return resourcePath;
             }
 
+            var executingDirectory = GetExecutingDirectory(type);
+            
             if (string.IsNullOrEmpty(overridePrefixPath))
             {
-                return Path.Combine(ExecutingDirectory, resourcePath);
+                return Path.Combine(executingDirectory, resourcePath);
             }
 
             return Path.IsPathRooted(overridePrefixPath)
                 ? Path.Combine(overridePrefixPath, resourcePath)
-                : Path.Combine(ExecutingDirectory, overridePrefixPath, resourcePath);
+                : Path.Combine(executingDirectory, overridePrefixPath, resourcePath);
+        }
+
+        private static string GetExecutingDirectory(PathType type)
+        {
+            switch (type)
+            {
+                case PathType.Assembly:
+                    return AssemblyDirectory;
+                case PathType.MainModule:
+                    return MainModuleDirectory;
+                default:
+                    return ExecutingDirectory;
+            }
+        }
+
+        public enum PathType
+        {
+            Default,
+            Assembly,
+            MainModule
         }
     }
 }
