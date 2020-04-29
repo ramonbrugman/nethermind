@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace Nethermind.Logging
@@ -25,16 +26,15 @@ namespace Nethermind.Logging
     {
         public static string ExecutingDirectory { get; }
 
+        private static string[] processesToUseAssemblyPath = {"dotnet", "testhost"};
+
         static PathUtils()
         {
             var process = Process.GetCurrentProcess();
-            if (process.ProcessName.StartsWith("dotnet", StringComparison.InvariantCultureIgnoreCase))
-            {
-                ExecutingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                return;
-            }
-
-            ExecutingDirectory = Path.GetDirectoryName(process.MainModule.FileName);
+            ExecutingDirectory = Path.GetDirectoryName(
+                processesToUseAssemblyPath.Any(p => process.ProcessName.StartsWith(p, StringComparison.InvariantCultureIgnoreCase)) 
+                ? Assembly.GetExecutingAssembly().Location
+                : process.MainModule.FileName);
         }
 
         public static string GetApplicationResourcePath(this string resourcePath, string overridePrefixPath = null)

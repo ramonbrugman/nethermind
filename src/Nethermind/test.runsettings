@@ -20,7 +20,7 @@
     <WorkDirectory>work</WorkDirectory>
     <InternalTraceLevel>Info</InternalTraceLevel>
     <RandomSeed>1234567</RandomSeed> -->
-	<NumberOfTestWorkers>4</NumberOfTestWorkers>
+	<NumberOfTestWorkers>8</NumberOfTestWorkers>
   </NUnit>
 
 </RunSettings>
