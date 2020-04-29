@@ -94,7 +94,7 @@ jobs:
         dotnet test -c Release src/Nethermind/Nethermind.State.Test -s src/Nethermind/test.runsettings
     - name: Nethermind.Synchronization.Test
       run: |
-        dotnet test -c Release src/Nethermind/Nethermind.Synchronization.Test -s src/Nethermind/test.runsettings
+        dotnet test -c Release src/Nethermind/Nethermind.Synchronization.Test
     - name: Nethermind.Ssz.Test
       run: |
         dotnet test -c Release src/Nethermind/Nethermind.Ssz.Test -s src/Nethermind/test.runsettings
