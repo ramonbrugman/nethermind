@@ -63,9 +63,9 @@ jobs:
     - name: Nethermind.Secp256k1.Test.Linux
       run: |
         dotnet test -c Release src/Nethermind/Nethermind.Secp256k1.Test
-    - name: Nethermind.Runner.Test
-      run: |
-        dotnet test -c Release src/Nethermind/Nethermind.Runner.Test
+    # - name: Nethermind.Runner.Test
+    #   run: |
+    #     dotnet test -c Release src/Nethermind/Nethermind.Runner.Test
     - name: Nethermind.State.Test
       run: |
         dotnet test -c Release src/Nethermind/Nethermind.State.Test
@@ -204,10 +204,10 @@ jobs:
     - name: Nethermind.Cryptography.Bls.Test
       run: |
         dotnet test -c Release src/Nethermind/Nethermind.Cryptography.Bls.Test
-    - name: Ethereum.Bls.Test
+    - name: Ethereum2.Bls.Test
       run: |
         dotnet test -c Release src/Nethermind/Ethereum2.Bls.Test
-    - name: Ethereum.Ssz.Test
-      run: |
-        dotnet test -c Release src/Nethermind/Ethereum2.Ssz.Test
+    # - name: Ethereum2.Ssz.Test
+    #   run: |
+    #     dotnet test -c Release src/Nethermind/Ethereum2.Ssz.Test
 
