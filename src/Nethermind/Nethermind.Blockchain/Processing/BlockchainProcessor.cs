@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Nethermind.Blockchain.Find;
@@ -25,7 +26,9 @@ using Nethermind.Core.Attributes;
 using Nethermind.Core.Crypto;
 using Nethermind.Dirichlet.Numerics;
 using Nethermind.Evm.Tracing;
+using Nethermind.Evm.Tracing.ParityStyle;
 using Nethermind.Logging;
+using Nethermind.Serialization.Json;
 
 namespace Nethermind.Blockchain.Processing
 {
@@ -225,23 +228,32 @@ namespace Nethermind.Blockchain.Processing
 
                 if (_logger.IsTrace) _logger.Trace($"Processing block {block.ToString(Block.Format.Short)}).");
 
-                IBlockTracer tracer = NullBlockTracer.Instance;
+                ParityLikeBlockTracer tracer = new ParityLikeBlockTracer(ParityTraceTypes.All);
 
-                Block processedBlock = Process(block, blockRef.ProcessingOptions, tracer);
-                if (processedBlock == null)
+                try
                 {
-                    if (_logger.IsTrace) _logger.Trace($"Failed / skipped processing {block.ToString(Block.Format.Full)}");
-                }
-                else
-                {
-                    if (_logger.IsTrace) _logger.Trace($"Processed block {block.ToString(Block.Format.Full)}");
-                    _stats.UpdateStats(block, _recoveryQueue.Count, _blockQueue.Count);
-                }
+                    Block processedBlock = Process(block, blockRef.ProcessingOptions, tracer);
+                    if (processedBlock == null)
+                    {
+                        if (_logger.IsTrace) _logger.Trace($"Failed / skipped processing {block.ToString(Block.Format.Full)}");
+                    }
+                    else
+                    {
+                        if (_logger.IsTrace) _logger.Trace($"Processed block {block.ToString(Block.Format.Full)}");
+                        _stats.UpdateStats(block, _recoveryQueue.Count, _blockQueue.Count);
+                    }
 
-                if (_logger.IsTrace) _logger.Trace($"Now {_blockQueue.Count} blocks waiting in the queue.");
-                if (IsEmpty)
+                    if (_logger.IsTrace) _logger.Trace($"Now {_blockQueue.Count} blocks waiting in the queue.");
+                    if (IsEmpty)
+                    {
+                        ProcessingQueueEmpty?.Invoke(this, EventArgs.Empty);
+                    }
+                }
+                finally
                 {
-                    ProcessingQueueEmpty?.Invoke(this, EventArgs.Empty);
+                    var traces = tracer.BuildResult().ToArray();
+                    var tracesString = new EthereumJsonSerializer().Serialize(traces);
+                    _logger.Info(tracesString);
                 }
             }
 
