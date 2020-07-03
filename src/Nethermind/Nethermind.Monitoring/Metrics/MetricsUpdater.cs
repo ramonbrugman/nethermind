@@ -15,6 +15,7 @@
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -28,27 +29,27 @@ namespace Nethermind.Monitoring.Metrics
     {
         private readonly int _intervalSeconds;
         private Timer _timer;
-        private Dictionary<string, Gauge> _gauges = new Dictionary<string, Gauge>();
-        private Dictionary<Type, PropertyInfo[]> _propertiesCache = new Dictionary<Type, PropertyInfo[]>();
-        private Dictionary<Type, FieldInfo[]> _fieldsCache = new Dictionary<Type, FieldInfo[]>();
-        private HashSet<Type> _metricTypes = new HashSet<Type>();
+        private readonly Dictionary<string, Gauge> _gauges = new Dictionary<string, Gauge>();
+        private readonly Dictionary<Type, PropertyInfo[]> _propertiesCache = new Dictionary<Type, PropertyInfo[]>();
+        private readonly Dictionary<Type, FieldInfo[]> _fieldsCache = new Dictionary<Type, FieldInfo[]>();
+        private readonly HashSet<Type> _metricTypes = new HashSet<Type>();
 
         public void RegisterMetrics(Type type)
         {
             EnsurePropertiesCached(type);
             foreach (PropertyInfo propertyInfo in _propertiesCache[type])
             {
-                _gauges[string.Concat(type.Name, ".", propertyInfo.Name)] = CreateGauge(BuildGaugeName(propertyInfo.Name));
+                CreateGauge(type, propertyInfo.Name, propertyInfo.PropertyType);
             }
             
             foreach (FieldInfo fieldInfo in _fieldsCache[type])
             {
-                _gauges[string.Concat(type.Name, ".", fieldInfo.Name)] = CreateGauge(BuildGaugeName(fieldInfo.Name));
+                CreateGauge(type, fieldInfo.Name, fieldInfo.FieldType);
             }
 
             _metricTypes.Add(type);
         }
-
+        
         private void EnsurePropertiesCached(Type type)
         {
             if (!_propertiesCache.ContainsKey(type))
@@ -61,11 +62,16 @@ namespace Nethermind.Monitoring.Metrics
                 _fieldsCache[type] = type.GetFields();
             }
         }
-
-        public static string BuildGaugeName(string propertyName)
+        
+        private void CreateGauge(Type type, string name, Type valueType)
         {
-            return Regex.Replace(propertyName, @"(\p{Ll})(\p{Lu})", "$1_$2").ToLowerInvariant();
+            if (typeof(IConvertible).IsAssignableFrom(valueType))
+            {
+                _gauges[string.Concat(type.Name, ".", name)] = CreateGauge(BuildGaugeName(name));
+            }
         }
+
+        private static string BuildGaugeName(string propertyName) => Regex.Replace(propertyName, @"(\p{Ll})(\p{Lu})", "$1_$2").ToLowerInvariant();
 
         private static Gauge CreateGauge(string name, string help = "")
             => Prometheus.Metrics.CreateGauge($"nethermind_{name}", help);
@@ -99,12 +105,27 @@ namespace Nethermind.Monitoring.Metrics
             
             foreach (PropertyInfo propertyInfo in _propertiesCache[type])
             {
-                _gauges[string.Concat(type.Name, ".", propertyInfo.Name)].Set(Convert.ToDouble(propertyInfo.GetValue(null)));
+                UpdateGauge(type, propertyInfo.Name, propertyInfo.GetValue(null));
             }
             
             foreach (FieldInfo fieldInfo in _fieldsCache[type])
             {
-                _gauges[string.Concat(type.Name, ".", fieldInfo.Name)].Set(Convert.ToDouble(fieldInfo.GetValue(null)));
+                UpdateGauge(type, fieldInfo.Name, fieldInfo.GetValue(null));
+            }
+        }
+
+        private void UpdateGauge(Type type, string name, object value)
+        {
+            if (value is IConvertible)
+            {
+                _gauges[string.Concat(type.Name, ".", name)].Set(Convert.ToDouble(value));
+            }
+            else if (value is IDictionary dictionary)
+            {
+                foreach (DictionaryEntry entry in dictionary)
+                {
+                    
+                }
             }
         }
     }
