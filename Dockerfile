@@ -10,20 +10,22 @@ RUN echo "@v3.12 http://dl-cdn.alpinelinux.org/alpine/v3.12/main/" >> /etc/apk/r
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine
 
+
 RUN echo "@v3.12 http://dl-cdn.alpinelinux.org/alpine/v3.12/main/" >> /etc/apk/repositories && \
-    apk --no-cache --no-progress add snappy-dev@v3.12 && \
-    addgroup -S nethermind && adduser -S nethermind -G nethermind
+    apk --no-cache --no-progress add gosu --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ snappy-dev@v3.12 && \
+    addgroup -g 1000 nethermind &&  \
+    adduser -u 1000 -G nethermind -s /bin/sh -D nethermind
+
+USER nethermind
 
 WORKDIR /nethermind
 
-COPY --from=build /out .
-COPY --from=rocksdb /nethermind/librocksdb.so /nethermind/librocksdb.so
+COPY --from=build --chown=nethermind:nethermind /out .
+COPY --from=rocksdb --chown=nethermind:nethermind /nethermind/librocksdb.so /nethermind/librocksdb.so
 
 ARG GIT_COMMIT=unspecified
 LABEL git_commit=$GIT_COMMIT
 
-RUN chown nethermind .
-
-USER nethermind
+# COPY entrypoint.sh /nethermind/entrypoint.sh
 
 ENTRYPOINT ["./Nethermind.Runner"]

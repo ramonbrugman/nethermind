@@ -20,11 +20,9 @@ COPY --from=build /out .
 ARG GIT_COMMIT=unspecified
 LABEL git_commit=$GIT_COMMIT
 
-COPY arm/arm32/librocksdb.so /nethermind/librocksdb.so
-COPY arm/arm32/libsecp256k1.so /nethermind/runtimes/linux-x64/native/libsecp256k1.so
+COPY --chown=nethermind:nethermind arm/arm32/librocksdb.so /nethermind/librocksdb.so
+COPY --chown=nethermind:nethermind arm/arm32/libsecp256k1.so /nethermind/runtimes/linux-x64/native/libsecp256k1.so
 
-RUN chown nethermind .
-
-USER nethermind:nethermind
+USER nethermind
 
 ENTRYPOINT ["./Nethermind.Runner"]
