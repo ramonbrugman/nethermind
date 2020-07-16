@@ -13,6 +13,8 @@ FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/core/aspnet:3.1
 RUN apt-get update && apt-get --no-install-recommends -y install libsnappy-dev libc6-dev libc6 libzstd1 libgflags-dev libssl1.0 && \
     rm -rf /var/lib/apt/lists/* && \
     groupadd -g 1000 nethermind && useradd -u 1000 -g nethermind nethermind
+    
+USER nethermind
 
 WORKDIR /nethermind
 COPY --from=build /out .
@@ -22,7 +24,5 @@ LABEL git_commit=$GIT_COMMIT
 
 COPY --chown=nethermind:nethermind arm/arm32/librocksdb.so /nethermind/librocksdb.so
 COPY --chown=nethermind:nethermind arm/arm32/libsecp256k1.so /nethermind/runtimes/linux-x64/native/libsecp256k1.so
-
-USER nethermind
 
 ENTRYPOINT ["./Nethermind.Runner"]

@@ -19,6 +19,8 @@ RUN echo "@v3.12 http://dl-cdn.alpinelinux.org/alpine/v3.12/main/" >> /etc/apk/r
     addgroup -g 1000 nethermind &&  \
     adduser -u 1000 -G nethermind -s /bin/sh -D nethermind
 
+USER nethermind
+
 WORKDIR /nethermind
 
 COPY --from=build /out .
@@ -27,7 +29,5 @@ COPY --from=rocksdb /nethermind/librocksdb.so /nethermind/runtimes/linux-arm64/n
 
 ARG GIT_COMMIT=unspecified
 LABEL git_commit=$GIT_COMMIT
-
-USER nethermind
 
 ENTRYPOINT ["./Nethermind.Runner"]
