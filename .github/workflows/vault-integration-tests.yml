@@ -1,6 +1,9 @@
 name: Vault Integration Test
 
-on: push
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   vault-tests:
