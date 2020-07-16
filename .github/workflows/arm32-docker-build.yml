@@ -1,9 +1,9 @@
 name: Publish ARM32 image to docker registry
 
-on:
-  repository_dispatch:
-    types: docker_arm32
-
+# on:
+#   repository_dispatch:
+#     types: docker_arm32
+on: push
 jobs:
   arm32-build:
     runs-on: ubuntu-latest
