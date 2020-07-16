@@ -43,7 +43,7 @@ jobs:
         uses: homoluctus/gitrivy@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          image: ${{ steps.settings.outputs.docker_image }}:${{ steps.settings.outputs.TAG }}
+          image: ${{ steps.settings.outputs.docker_image }}:${{ steps.settings.outputs.TAG }}-arm32
           issue_assignee: matilote
       - name: Clear
         if: always()
