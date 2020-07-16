@@ -1,9 +1,9 @@
 name: Publish ARM32 image to docker registry
 
-# on:
-#   repository_dispatch:
-#     types: docker_arm32
-on: push
+on:
+  repository_dispatch:
+    types: docker_arm32
+
 jobs:
   arm32-build:
     runs-on: ubuntu-latest
@@ -16,7 +16,7 @@ jobs:
         id: settings
         run: |
           echo "Event '${{ github.event.action }}' with tag: '${{ github.event.client_payload.tag }}'"
-          echo ::set-output name=TAG::test
+          echo ::set-output name=TAG::${{ github.event.client_payload.tag }}
           echo ::set-output name=TAG_FROM_REPO::$(git describe --tags $(git rev-list --tags --max-count=1))
           echo ::set-output name=docker_username::${{ secrets.DOCKER_USERNAME }}
           echo ::set-output name=docker_image::nethermind/nethermind
@@ -43,7 +43,7 @@ jobs:
         uses: homoluctus/gitrivy@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          image: ${{ steps.settings.outputs.docker_image }}:${{ steps.settings.outputs.TAG }}-arm32
+          image: ${{ steps.settings.outputs.docker_image }}:${{ steps.settings.outputs.TAG }}
           issue_assignee: matilote
       - name: Clear
         if: always()
