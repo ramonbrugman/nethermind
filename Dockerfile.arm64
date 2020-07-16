@@ -15,7 +15,8 @@ RUN apt-get update && apt-get install -y libsnappy-dev libc6-dev libc6 libzstd1 
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine-arm64v8
 
 RUN echo "@v3.12 http://dl-cdn.alpinelinux.org/alpine/v3.12/main/" >> /etc/apk/repositories && \
-    apk --no-cache --no-progress add snappy-dev@v3.12
+    apk --no-cache --no-progress add snappy-dev@v3.12 && \
+    addgroup -S nethermind && adduser -S nethermind -G nethermind
 
 WORKDIR /nethermind
 
@@ -25,5 +26,9 @@ COPY --from=rocksdb /nethermind/librocksdb.so /nethermind/runtimes/linux-arm64/n
 
 ARG GIT_COMMIT=unspecified
 LABEL git_commit=$GIT_COMMIT
+
+RUN chown nethermind .
+
+USER nethermind
 
 ENTRYPOINT ["./Nethermind.Runner"]

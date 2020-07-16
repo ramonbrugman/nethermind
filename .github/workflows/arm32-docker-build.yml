@@ -39,6 +39,12 @@ jobs:
         if: steps.settings.outputs.TAG != steps.settings.outputs.TAG_FROM_REPO
         run: |
           docker buildx build --platform=linux/arm/v7 -t "${{ steps.settings.outputs.docker_image }}:${{ steps.settings.outputs.TAG }}-arm32" -f Dockerfile.arm32 --build-arg GIT_COMMIT=$(git log -1 --format=%h) . --push
+      - name: Vulnerability Scan with Trivy
+        uses: homoluctus/gitrivy@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image: ${{ steps.settings.outputs.docker_image }}:${{ steps.settings.outputs.TAG }}
+          issue_assignee: matilote
       - name: Clear
         if: always()
         run: |

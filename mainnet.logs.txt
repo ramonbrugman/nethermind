@@ -1,0 +1,289 @@
+2020-07-16 13:00:11.8677|INFO|1|Grafana / Prometheus metrics are disabled in configuration 
+2020-07-16 13:00:12.1996|INFO|1|Using http://ipv4.icanhazip.com to get external ip 
+2020-07-16 13:00:12.5157|INFO|4|Generating private key for the node (no node key in configuration) - stored in plain + key store for JSON RPC unlocking 
+2020-07-16 13:00:14.6710|INFO|4|Store this password for unlocking the node key for JSON RPC - this is not secure - this log message will be in your log files. Use only in DEV contexts. 
+2020-07-16 13:00:14.6710|INFO|4|3pveCxhb 
+2020-07-16 13:00:14.7727|INFO|13|Address 0xb3e246e1b1bf41ae4a0233c3c77c70e6147bfecb is configured for signing blocks. 
+2020-07-16 13:00:14.8051|INFO|13|Block tree initialized, last processed is 0, best queued is 0, best known is 0, lowest inserted header , body  
+2020-07-16 13:00:15.0711|INFO|13|No block tree levels to review for fixes. All fine. 
+2020-07-16 13:00:15.0811|INFO|13|Numbers resolved, level = Max(0, 0), header = Max(0, 0), body = Max(0, 0) 
+2020-07-16 13:00:15.1086|WARN|12|Using the local IP override: NetworkConfig.LocalIp = 172.17.0.2 
+2020-07-16 13:00:15.1086|WARN|12|Using the external IP override: NetworkConfig.ExternalIp = 95.160.151.31 
+2020-07-16 13:00:15.2516|INFO|8|Loaded 0 static nodes from file: /nethermind/Data/static-nodes.json 
+2020-07-16 13:00:15.3293|INFO|4|ReceiptsDb migration disabled. Finding logs when multiple blocks receipts need to be scanned might be slow. 
+2020-07-16 13:00:15.3434|INFO|4|
+======================== Nethermind initialization completed ========================
+Version      : 1.8.67-12-412b87a10-20200716/X64-Linux/Core3.1.6
+This node    : enode://2284fbe63edb2997ff3a92e795ca78e5f5d519f37c5e829bfa1630d8683042bb95d09bd54734517198e49895af9dc5ac90aeafd304083a4efa31192a83bf861a@95.160.151.31:30303
+Node address : 0xb3e246e1b1bf41ae4a0233c3c77c70e6147bfecb (do not use as an account)
+Mem est tx   :     78MB
+Mem est trie :    240MB
+Mem est peers:    100MB
+Mem est netty:    268MB
+Mem est DB   :   2550MB
+Mem est      :   3236MB
+Genesis hash : 0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3
+External IP  : 95.160.151.31
+Ethereum     : tcp://95.160.151.31:30303
+Discovery    : udp://95.160.151.31:30303
+DB location  : nethermind_db/mainnet
+Chainspec    : chainspec/foundation.json
+Chain head   : 0
+Chain ID     : Mainnet
+===================================================================================== 
+2020-07-16 13:00:15.3434|INFO|9|Json RPC is disabled 
+2020-07-16 13:00:16.1091|INFO|14|Waiting for peers... 1s 
+2020-07-16 13:00:16.1201|INFO|14|Sync peers - Initialized: 0 | All: 0 | Max: 100 
+2020-07-16 13:00:16.3951|INFO|8|Connected to 8 bootnodes, 8 trusted/persisted nodes 
+2020-07-16 13:00:17.1202|INFO|7|Waiting for peers... 2s 
+2020-07-16 13:00:18.1229|INFO|72|Changing state to FastHeaders at processed:0|state:0|block:0|header:0|peer block:10065613 
+2020-07-16 13:00:18.1229|INFO|72|Sync mode changed from None to FastHeaders 
+2020-07-16 13:00:19.1262|INFO|70|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:19.1500|INFO|70|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:20.1540|INFO|8|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:20.1540|INFO|8|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:21.1566|INFO|70|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:21.1572|INFO|70|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:22.1581|INFO|66|Peers | with known best block: 2 | all: 2 | 
+2020-07-16 13:00:22.1581|INFO|66|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:23.1586|INFO|70|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:23.1586|INFO|70|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:24.1596|INFO|4|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:24.1596|INFO|4|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:25.1598|INFO|72|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:25.1598|INFO|72|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:26.1584|INFO|68|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:26.1584|INFO|68|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:27.1598|INFO|4|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:27.1598|INFO|4|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:28.1589|INFO|72|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:28.1589|INFO|72|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:29.1588|INFO|72|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:29.1588|INFO|72|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:30.1590|INFO|65|Peers | with known best block: 1 | all: 1 | 
+2020-07-16 13:00:30.1590|INFO|65|Old Headers         0 / 10440000 | queue     0 | current     0.00bps | total     0.00bps 
+2020-07-16 13:00:31.1564|INFO|14|Changing state to FastSync, FastHeaders at processed:0|state:0|block:0|header:10440000|peer block:10470687 
+2020-07-16 13:00:31.1564|INFO|14|Sync mode changed from FastHeaders to FastSync, FastHeaders 
+2020-07-16 13:00:31.1586|INFO|69|Peers | with known best block: 2 | all: 2 | 
+2020-07-16 13:00:31.1586|INFO|69|Old Headers       576 / 10440000 | queue     0 | current     0.00bps | total  2437.41bps 
+2020-07-16 13:00:31.3817|INFO|12|Building ethash cache for epoch 347 
+2020-07-16 13:00:31.3817|INFO|14|Building ethash cache for epoch 349 
+2020-07-16 13:00:31.3817|INFO|74|Building ethash cache for epoch 348 
+2020-07-16 13:00:32.1586|INFO|73|Peers | with known best block: 2 | all: 3 | 
+2020-07-16 13:00:32.1586|INFO|73|Old Headers       960 / 10440000 | queue     0 | current   384.13bps | total   663.61bps 
+2020-07-16 13:00:32.1586|INFO|73|Downloaded 10440510 / 10470687 | current     0.00bps | total   415.11bps 
+2020-07-16 13:00:33.1598|INFO|25|Peers | with known best block: 2 | all: 3 | 
+2020-07-16 13:00:33.1598|INFO|25|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total   355.81bps 
+2020-07-16 13:00:33.1598|INFO|25|Downloaded 10440510 / 10470687 | current     0.00bps | total   157.85bps 
+2020-07-16 13:00:34.1628|INFO|70|Peers | with known best block: 3 | all: 3 | 
+2020-07-16 13:00:34.1628|INFO|70|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total   242.92bps 
+2020-07-16 13:00:34.1628|INFO|70|Downloaded 10440510 / 10470687 | current     0.00bps | total    97.39bps 
+2020-07-16 13:00:35.1618|INFO|71|Peers | with known best block: 3 | all: 3 | 
+2020-07-16 13:00:35.1618|INFO|71|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total   184.60bps 
+2020-07-16 13:00:35.1618|INFO|71|Downloaded 10440510 / 10470687 | current     0.00bps | total    70.49bps 
+2020-07-16 13:00:36.1631|INFO|68|Peers | with known best block: 3 | all: 3 | 
+2020-07-16 13:00:36.1631|INFO|68|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total   148.79bps 
+2020-07-16 13:00:36.1631|INFO|68|Downloaded 10440510 / 10470687 | current     0.00bps | total    55.21bps 
+2020-07-16 13:00:37.1617|INFO|70|Peers | with known best block: 3 | all: 3 | 
+2020-07-16 13:00:37.1617|INFO|70|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total   124.67bps 
+2020-07-16 13:00:37.1617|INFO|70|Downloaded 10440510 / 10470687 | current     0.00bps | total    45.40bps 
+2020-07-16 13:00:37.4953|INFO|74|Cache for epoch 348 with size 62389568 nd seed 8f66cb652f536fca495d95b4885f2a8079d496da2bd0e1f6b4bca912fc844dfb built in 6113ms 
+2020-07-16 13:00:37.5161|INFO|12|Cache for epoch 347 with size 62259136 nd seed aa8b356404203e53294ff7307b05113d35911faf66d2939185df08a0edbbacec built in 6113ms 
+2020-07-16 13:00:37.5695|INFO|14|Cache for epoch 349 with size 62520512 nd seed b8df0d62344013cf75854c6b50b58722ad8c0475080e39ce4c6b193d9b33efa5 built in 6113ms 
+2020-07-16 13:00:38.1627|INFO|7|Peers | with known best block: 3 | all: 3 | 
+2020-07-16 13:00:38.1627|INFO|7|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total   107.24bps 
+2020-07-16 13:00:38.1627|INFO|7|Downloaded 10441532 / 10470690 | current  1021.00bps | total   192.95bps 
+2020-07-16 13:00:39.1621|INFO|76|Peers | with known best block: 4 | all: 4 | 
+2020-07-16 13:00:39.1621|INFO|76|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    94.11bps 
+2020-07-16 13:00:39.1621|INFO|76|Downloaded 10443065 / 10470690 | current  1533.95bps | total   368.88bps 
+2020-07-16 13:00:40.1627|INFO|69|Peers | with known best block: 4 | all: 5 | 
+2020-07-16 13:00:40.1627|INFO|69|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    83.83bps 
+2020-07-16 13:00:40.1627|INFO|69|Downloaded 10444598 / 10470690 | current  1531.91bps | total   503.92bps 
+2020-07-16 13:00:41.1628|INFO|12|Peers | with known best block: 3 | all: 4 | 
+2020-07-16 13:00:41.1628|INFO|12|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    75.58bps 
+2020-07-16 13:00:41.1628|INFO|12|Downloaded 10446642 / 10470690 | current  2043.97bps | total   664.04bps 
+2020-07-16 13:00:42.1640|INFO|68|Peers | with known best block: 3 | all: 4 | 
+2020-07-16 13:00:42.1640|INFO|68|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    68.80bps 
+2020-07-16 13:00:42.1640|INFO|68|Downloaded 10448686 / 10470690 | current  2041.90bps | total   793.92bps 
+2020-07-16 13:00:43.1618|INFO|8|Peers | with known best block: 4 | all: 4 | 
+2020-07-16 13:00:43.1618|INFO|8|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    63.16bps 
+2020-07-16 13:00:43.1618|INFO|8|Downloaded 10450730 / 10470690 | current  2048.68bps | total   901.68bps 
+2020-07-16 13:00:44.1624|INFO|68|Peers | with known best block: 4 | all: 4 | 
+2020-07-16 13:00:44.1624|INFO|68|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    58.35bps 
+2020-07-16 13:00:44.1624|INFO|68|Downloaded 10452774 / 10470690 | current  2042.53bps | total   992.16bps 
+2020-07-16 13:00:45.1628|INFO|74|Peers | with known best block: 4 | all: 4 | 
+2020-07-16 13:00:45.1628|INFO|74|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    54.23bps 
+2020-07-16 13:00:45.1628|INFO|74|Downloaded 10454307 / 10470690 | current  1532.45bps | total  1031.84bps 
+2020-07-16 13:00:46.1613|INFO|4|Peers | with known best block: 5 | all: 5 | 
+2020-07-16 13:00:46.1613|INFO|4|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    50.66bps 
+2020-07-16 13:00:46.1613|INFO|4|Downloaded 10456351 / 10470690 | current  2047.25bps | total  1101.20bps 
+2020-07-16 13:00:46.1681|INFO|4|Sync peers 5(5)/100
+   [HBR ][    ][Peer|eth64|10470690|OpenEthereum/v3.0.0-unstable-fc03bea-20200706/x86_64-unknown-linux-gnu/rustc1.44.1|145.239.10.75:30303][0|1163|0|0|0]
+   [H   ][    ][Peer|eth64|10470690|Geth/v1.9.9-stable-01744997/linux-amd64/go1.13.5|124.156.180.196:30303][0|0|0|0|0] 
+2020-07-16 13:00:47.1680|INFO|4|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:00:47.1680|INFO|4|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    47.51bps 
+2020-07-16 13:00:47.1680|INFO|4|Downloaded 10458395 / 10470690 | current  2030.40bps | total  1161.07bps 
+2020-07-16 13:00:48.1677|INFO|69|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:00:48.1677|INFO|69|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    44.74bps 
+2020-07-16 13:00:48.1677|INFO|69|Downloaded 10460950 / 10470690 | current  2555.77bps | total  1244.95bps 
+2020-07-16 13:00:49.1677|INFO|76|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:00:49.1677|INFO|76|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    42.28bps 
+2020-07-16 13:00:49.1677|INFO|76|Downloaded 10463505 / 10470690 | current  2554.96bps | total  1319.28bps 
+2020-07-16 13:00:50.1670|INFO|12|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:00:50.1670|INFO|12|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    40.07bps 
+2020-07-16 13:00:50.1670|INFO|12|Downloaded 10466060 / 10470690 | current  2557.00bps | total  1385.69bps 
+2020-07-16 13:00:51.1666|INFO|74|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:00:51.1666|INFO|74|Old Headers       960 / 10440000 | queue     0 | current     0.00bps | total    38.09bps 
+2020-07-16 13:00:51.1666|INFO|74|Downloaded 10468615 / 10470690 | current  2555.89bps | total  1445.31bps 
+2020-07-16 13:00:51.5886|INFO|8|Building ethash cache for epoch 350 
+2020-07-16 13:00:52.1674|INFO|68|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:00:52.1674|INFO|68|Old Headers       960 / 10440000 | queue   192 | current     0.00bps | total    36.28bps 
+2020-07-16 13:00:52.1996|INFO|66|Changing state to StateNodes, FastHeaders at processed:0|state:0|block:0|header:10470688|peer block:10470690 
+2020-07-16 13:00:52.1996|INFO|66|Sync mode changed from FastSync, FastHeaders to StateNodes, FastHeaders 
+2020-07-16 13:00:52.1996|INFO|66|Starting the node data sync from the 10470688 (0x75c966...a8c96c) 0x5ded268e9bd1606992d213d4db2943c9b7a5513aefc313c3700ffd4c57d462e3 root 
+2020-07-16 13:00:52.2022|INFO|66|Setting state sync state root to 10470688 0x5ded268e9bd1606992d213d4db2943c9b7a5513aefc313c3700ffd4c57d462e3 
+2020-07-16 13:00:52.2022|INFO|66|Now syncing nodes starting from root of block 10470688 
+2020-07-16 13:00:52.7109|INFO|77|Setting state sync state root to 10470688 0x5ded268e9bd1606992d213d4db2943c9b7a5513aefc313c3700ffd4c57d462e3 
+2020-07-16 13:00:53.1668|INFO|12|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:00:53.1668|INFO|12|Old Headers       960 / 10440000 | queue  1920 | current     0.00bps | total    34.65bps 
+2020-07-16 13:00:53.2153|INFO|69|Changing state to FastSync, StateNodes, FastHeaders at processed:0|state:0|block:0|header:10470688|peer block:10470691 
+2020-07-16 13:00:53.2153|INFO|69|Sync mode changed from StateNodes, FastHeaders to FastSync, StateNodes, FastHeaders 
+2020-07-16 13:00:53.2153|INFO|69|Starting the node data sync from the 10470688 (0x75c966...a8c96c) 0x5ded268e9bd1606992d213d4db2943c9b7a5513aefc313c3700ffd4c57d462e3 root 
+2020-07-16 13:00:53.2153|INFO|69|Setting state sync state root to 10470688 0x5ded268e9bd1606992d213d4db2943c9b7a5513aefc313c3700ffd4c57d462e3 
+2020-07-16 13:00:54.1674|INFO|12|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:00:54.1674|INFO|12|Old Headers      3840 / 10440000 | queue   384 | current  2878.24bps | total   157.47bps 
+2020-07-16 13:00:54.3348|INFO|13|State Sync 00.00:00:00 | ~0.00 % |   0.00MB / ~45600.00MB | kB/s:     0 | accounts 0 | nodes 0 | diagnostics: 1.1.00ms 
+2020-07-16 13:00:55.2394|INFO|66|Peers | with known best block: 6 | all: 8 | 
+2020-07-16 13:00:55.2394|INFO|66|Old Headers      3840 / 10440000 | queue  1728 | current     0.00bps | total   150.51bps 
+2020-07-16 13:00:55.2394|INFO|76|Changing state to StateNodes, FastHeaders at processed:0|state:0|block:0|header:10470689|peer block:10470691 
+2020-07-16 13:00:55.2394|INFO|76|Sync mode changed from FastSync, StateNodes, FastHeaders to StateNodes, FastHeaders 
+2020-07-16 13:00:55.6461|INFO|67|Setting state sync state root to 10470688 0x5ded268e9bd1606992d213d4db2943c9b7a5513aefc313c3700ffd4c57d462e3 
+2020-07-16 13:00:56.2377|INFO|66|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:00:56.2377|INFO|66|Old Headers      3840 / 10440000 | queue  3264 | current     0.00bps | total   144.55bps 
+2020-07-16 13:00:56.2377|INFO|74|Starting the node data sync from the 10470689 (0xfa8b17...0824a4) 0xda8db41cb6a63fb88945aff9071a3e50ce140aa70f99c270f349881dbf854def root 
+2020-07-16 13:00:56.2377|INFO|74|Setting state sync state root to 10470689 0xda8db41cb6a63fb88945aff9071a3e50ce140aa70f99c270f349881dbf854def 
+2020-07-16 13:00:56.2377|INFO|74|Now syncing nodes starting from root of block 10470689 
+2020-07-16 13:00:57.0030|INFO|8|Cache for epoch 350 with size 62651584 nd seed bb3dd6b4ec2b43058120a6ca01754a97fee5eb82a93652f235af85458f778d68 built in 5414ms 
+2020-07-16 13:00:57.2384|INFO|73|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:00:57.2384|INFO|73|Old Headers      5952 / 10440000 | queue  2688 | current  2110.62bps | total   219.54bps 
+2020-07-16 13:00:57.4625|INFO|8|State Sync 00.00:00:01 | ~0.00 % |   0.00MB / ~45600.00MB | kB/s:     1 | accounts 7 | nodes 8 | diagnostics: 1.2.50ms 
+2020-07-16 13:00:58.2398|INFO|74|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:00:58.2398|INFO|74|Old Headers      7872 / 10440000 | queue  1536 | current  1917.30bps | total   281.95bps 
+2020-07-16 13:00:58.5977|INFO|73|State Sync 00.00:00:03 | ~0.00 % |   0.00MB / ~45600.00MB | kB/s:     1 | accounts 18 | nodes 19 | diagnostics: 2.5.00ms 
+2020-07-16 13:00:59.2395|INFO|4|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:00:59.2395|INFO|4|Old Headers      9984 / 10440000 | queue  1152 | current  2112.81bps | total   346.77bps 
+2020-07-16 13:00:59.6964|INFO|76|State Sync 00.00:00:04 | ~0.00 % |   0.23MB / ~45600.00MB | kB/s:   209 | accounts 1152 | nodes 1488 | diagnostics: 2.6.77ms 
+2020-07-16 13:01:00.2382|INFO|66|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:00.2382|INFO|66|Old Headers      9984 / 10440000 | queue  3072 | current     0.00bps | total   334.92bps 
+2020-07-16 13:01:00.8786|INFO|8|State Sync 00.00:00:05 | ~0.00 % |   0.44MB / ~45600.00MB | kB/s:   179 | accounts 2193 | nodes 3217 | diagnostics: 2.8.56ms 
+2020-07-16 13:01:01.2388|INFO|13|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:01.2388|INFO|13|Old Headers      9984 / 10440000 | queue  6144 | current     0.00bps | total   323.84bps 
+2020-07-16 13:01:01.9306|INFO|71|State Sync 00.00:00:06 | ~0.00 % |   0.62MB / ~45600.00MB | kB/s:   167 | accounts 2947 | nodes 4497 | diagnostics: 2.9.24ms 
+2020-07-16 13:01:02.2405|INFO|71|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:02.2405|INFO|71|Old Headers     17472 / 10440000 | queue  1536 | current  7475.40bps | total   553.15bps 
+2020-07-16 13:01:03.0460|INFO|8|State Sync 00.00:00:07 | ~0.00 % |   0.84MB / ~45600.00MB | kB/s:   200 | accounts 4098 | nodes 6117 | diagnostics: 2.9.71ms 
+2020-07-16 13:01:03.2387|INFO|8|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:03.2387|INFO|8|Old Headers     17472 / 10440000 | queue  4032 | current     0.00bps | total   536.03bps 
+2020-07-16 13:01:04.2386|INFO|76|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:04.2386|INFO|76|Old Headers     17472 / 10440000 | queue  7104 | current     0.00bps | total   519.90bps 
+2020-07-16 13:01:04.3203|INFO|12|State Sync 00.00:00:09 | ~0.00 % |   1.05MB / ~45600.00MB | kB/s:   164 | accounts 5192 | nodes 7796 | diagnostics: 2.10.89ms 
+2020-07-16 13:01:05.2390|INFO|13|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:05.2390|INFO|13|Old Headers     26880 / 10440000 | queue     0 | current  9405.94bps | total   779.49bps 
+2020-07-16 13:01:05.3355|INFO|13|State Sync 00.00:00:09 | ~0.00 % |   1.21MB / ~45600.00MB | kB/s:   153 | accounts 5825 | nodes 9025 | diagnostics: 2.11.47ms 
+2020-07-16 13:01:06.2388|INFO|8|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:06.2388|INFO|8|Old Headers     29376 / 10440000 | queue   192 | current  2496.54bps | total   828.21bps 
+2020-07-16 13:01:06.2893|INFO|8|Changing state to FastSync, StateNodes, FastHeaders at processed:0|state:0|block:0|header:10470689|peer block:10470692 
+2020-07-16 13:01:06.2893|INFO|8|Sync mode changed from StateNodes, FastHeaders to FastSync, StateNodes, FastHeaders 
+2020-07-16 13:01:06.7554|INFO|4|State Sync 00.00:00:10 | ~0.00 % |   1.36MB / ~45600.00MB | kB/s:   106 | accounts 6278 | nodes 10593 | diagnostics: 2.11.45ms 
+2020-07-16 13:01:07.2400|INFO|74|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:07.2400|INFO|74|Old Headers     29760 / 10440000 | queue   192 | current   383.52bps | total   815.92bps 
+2020-07-16 13:01:07.9712|INFO|69|State Sync 00.00:00:12 | ~0.00 % |   1.53MB / ~45600.00MB | kB/s:   146 | accounts 7138 | nodes 11905 | diagnostics: 2.11.67ms 
+2020-07-16 13:01:08.2377|INFO|71|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:08.2377|INFO|71|Old Headers     30144 / 10440000 | queue  2880 | current   384.96bps | total   804.38bps 
+2020-07-16 13:01:09.1611|INFO|76|State Sync 00.00:00:13 | ~0.00 % |   1.71MB / ~45600.00MB | kB/s:   151 | accounts 7958 | nodes 13238 | diagnostics: 3.11.55ms 
+2020-07-16 13:01:09.2395|INFO|74|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:09.2395|INFO|74|Old Headers     30144 / 10440000 | queue  5376 | current     0.00bps | total   783.30bps 
+2020-07-16 13:01:10.2928|INFO|73|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:10.2928|INFO|73|Old Headers     36480 / 10440000 | queue  1344 | current  6015.53bps | total   923.56bps 
+2020-07-16 13:01:10.3980|INFO|67|State Sync 00.00:00:15 | ~0.00 % |   1.97MB / ~45600.00MB | kB/s:   205 | accounts 9251 | nodes 15130 | diagnostics: 3.11.57ms 
+2020-07-16 13:01:11.2898|INFO|74|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:11.2898|INFO|74|Old Headers     36480 / 10440000 | queue  2880 | current     0.00bps | total   900.70bps 
+2020-07-16 13:01:11.3249|INFO|67|Changing state to StateNodes, FastHeaders at processed:0|state:0|block:0|header:10470692|peer block:10470694 
+2020-07-16 13:01:11.3249|INFO|67|Sync mode changed from FastSync, StateNodes, FastHeaders to StateNodes, FastHeaders 
+2020-07-16 13:01:11.6546|INFO|66|State Sync 00.00:00:16 | ~0.00 % |   2.12MB / ~45600.00MB | kB/s:   125 | accounts 10154 | nodes 16315 | diagnostics: 3.11.75ms 
+2020-07-16 13:01:12.2916|INFO|74|Peers | with known best block: 7 | all: 8 | 
+2020-07-16 13:01:12.2916|INFO|74|Old Headers     36480 / 10440000 | queue  6720 | current     0.00bps | total   878.85bps 
+2020-07-16 13:01:12.8496|INFO|68|State Sync 00.00:00:17 | ~0.01 % |   2.39MB / ~45600.00MB | kB/s:   223 | accounts 11411 | nodes 18321 | diagnostics: 3.12.23ms 
+2020-07-16 13:01:13.2914|INFO|13|Peers | with known best block: 7 | all: 8 | 
+2020-07-16 13:01:13.2914|INFO|13|Old Headers     45696 / 10440000 | queue     0 | current  9218.25bps | total  1076.00bps 
+2020-07-16 13:01:13.8853|INFO|13|State Sync 00.00:00:18 | ~0.01 % |   2.63MB / ~45600.00MB | kB/s:   228 | accounts 12445 | nodes 19995 | diagnostics: 2.12.27ms 
+2020-07-16 13:01:14.2916|INFO|69|Peers | with known best block: 7 | all: 8 | 
+2020-07-16 13:01:14.2916|INFO|69|Old Headers     45696 / 10440000 | queue  3456 | current     0.00bps | total  1051.14bps 
+2020-07-16 13:01:15.0696|INFO|68|State Sync 00.00:00:19 | ~0.01 % |   2.88MB / ~45600.00MB | kB/s:   218 | accounts 13577 | nodes 22058 | diagnostics: 2.12.35ms 
+2020-07-16 13:01:15.2934|INFO|71|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:15.2934|INFO|71|Old Headers     49920 / 10440000 | queue  1344 | current  4216.37bps | total  1122.73bps 
+2020-07-16 13:01:15.3520|INFO|68|Node sync queues review (64 4286131088 | 64 4293918720):
+  before 0000 + 000000 000000 000146 + 000000 034571 001864
+  after 0000 + 000000 000000 000146 + 000000 034579 001856
+  time spent in review: 11ms 
+2020-07-16 13:01:16.2954|INFO|72|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:16.2954|INFO|72|Syncing state nodes 
+2020-07-16 13:01:16.2954|INFO|72|Old Headers     49920 / 10440000 | queue  3456 | current     0.00bps | total  1097.89bps 
+2020-07-16 13:01:16.2954|INFO|72|Sync peers 6(6)/100
+   [H  S][    ][Peer|eth64|10470694|OpenEthereum/v3.0.0-unstable-fc03bea-20200706/x86_64-unknown-linux-gnu/rustc1.44.1|145.239.10.75:30303][155|1054|0|0|239]
+   [H  S][    ][Peer|eth65|10470694|Geth/v1.9.14-stable-6d74d1e5/linux-amd64/go1.14.2|54.224.110.88:30303][0|150|0|0|36]
+   [H   ][    ][Peer|eth64|10470691|Geth/v1.9.9-stable-01744997/linux-amd64/go1.13.5|124.156.180.196:30303][3000|0|0|0|0]
+   [H   ][    ][Peer|eth63|10427703|Parity-Ethereum/v2.5.13-stable/x86_64-linux-gnu/rustc1.37.0|188.72.207.120:30308][122|895|0|0|0] 
+2020-07-16 13:01:16.3011|INFO|67|State Sync 00.00:00:20 | ~0.01 % |   3.05MB / ~45600.00MB | kB/s:   138 | accounts 14115 | nodes 23763 | diagnostics: 2.12.23ms 
+2020-07-16 13:01:17.2942|INFO|67|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:17.2942|INFO|67|Old Headers     49920 / 10440000 | queue  5376 | current     0.00bps | total  1074.21bps 
+2020-07-16 13:01:17.4217|INFO|74|State Sync 00.00:00:21 | ~0.01 % |   3.22MB / ~45600.00MB | kB/s:   148 | accounts 14527 | nodes 25779 | diagnostics: 3.12.62ms 
+2020-07-16 13:01:18.2949|INFO|69|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:18.2949|INFO|69|Old Headers     55680 / 10440000 | queue  1152 | current  5755.50bps | total  1173.27bps 
+2020-07-16 13:01:18.5421|INFO|66|State Sync 00.00:00:23 | ~0.01 % |   3.36MB / ~45600.00MB | kB/s:   128 | accounts 15020 | nodes 26824 | diagnostics: 3.12.54ms 
+2020-07-16 13:01:19.2972|INFO|74|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:19.2972|INFO|74|Old Headers     55680 / 10440000 | queue  3072 | current     0.00bps | total  1148.92bps 
+2020-07-16 13:01:19.6735|INFO|66|State Sync 00.00:00:24 | ~0.01 % |   3.45MB / ~45600.00MB | kB/s:    75 | accounts 15652 | nodes 27586 | diagnostics: 2.12.41ms 
+2020-07-16 13:01:20.2981|INFO|74|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:20.2981|INFO|74|Old Headers     55680 / 10440000 | queue  4800 | current     0.00bps | total  1125.59bps 
+2020-07-16 13:01:20.8271|INFO|66|State Sync 00.00:00:25 | ~0.01 % |   3.65MB / ~45600.00MB | kB/s:   171 | accounts 16750 | nodes 29252 | diagnostics: 3.12.64ms 
+2020-07-16 13:01:21.2981|INFO|74|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:21.2981|INFO|74|Old Headers     61056 / 10440000 | queue  1152 | current  5376.13bps | total  1210.10bps 
+2020-07-16 13:01:22.0114|INFO|69|State Sync 00.00:00:26 | ~0.01 % |   3.81MB / ~45600.00MB | kB/s:   140 | accounts 17385 | nodes 30679 | diagnostics: 3.12.92ms 
+2020-07-16 13:01:22.2986|INFO|73|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:22.2986|INFO|73|Old Headers     61056 / 10440000 | queue  2496 | current     0.00bps | total  1186.50bps 
+2020-07-16 13:01:23.0212|INFO|4|State Sync 00.00:00:27 | ~0.01 % |   3.93MB / ~45600.00MB | kB/s:   117 | accounts 17397 | nodes 31558 | diagnostics: 3.13.17ms 
+2020-07-16 13:01:23.2981|INFO|12|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:23.2981|INFO|12|Old Headers     61056 / 10440000 | queue  3840 | current     0.00bps | total  1163.82bps 
+2020-07-16 13:01:24.0416|INFO|76|State Sync 00.00:00:28 | ~0.01 % |   3.99MB / ~45600.00MB | kB/s:    54 | accounts 17401 | nodes 32335 | diagnostics: 3.13.23ms 
+2020-07-16 13:01:24.2989|INFO|12|Peers | with known best block: 6 | all: 6 | 
+2020-07-16 13:01:24.2989|INFO|12|Old Headers     62976 / 10440000 | queue  3264 | current  1918.43bps | total  1177.99bps 
+2020-07-16 13:01:25.1710|INFO|67|State Sync 00.00:00:29 | ~0.01 % |   4.11MB / ~45600.00MB | kB/s:   112 | accounts 17401 | nodes 34058 | diagnostics: 3.13.26ms 
+2020-07-16 13:01:25.2989|INFO|73|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:25.2989|INFO|73|Old Headers     64128 / 10440000 | queue  4224 | current  1152.15bps | total  1177.51bps 
+2020-07-16 13:01:26.2985|INFO|71|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:26.2985|INFO|71|Old Headers     67584 / 10440000 | queue  2496 | current  3457.29bps | total  1218.72bps 
+2020-07-16 13:01:26.3564|INFO|66|State Sync 00.00:00:30 | ~0.01 % |   4.23MB / ~45600.00MB | kB/s:   102 | accounts 17401 | nodes 35729 | diagnostics: 3.13.31ms 
+2020-07-16 13:01:27.2994|INFO|69|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:27.2994|INFO|69|Old Headers     67584 / 10440000 | queue  4800 | current     0.00bps | total  1197.06bps 
+2020-07-16 13:01:27.5017|INFO|66|State Sync 00.00:00:31 | ~0.01 % |   4.39MB / ~45600.00MB | kB/s:   139 | accounts 17401 | nodes 37895 | diagnostics: 3.13.37ms 
+2020-07-16 13:01:28.3000|INFO|4|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:28.3000|INFO|4|Old Headers     69312 / 10440000 | queue  4608 | current  1727.06bps | total  1206.31bps 
+2020-07-16 13:01:28.6667|INFO|68|State Sync 00.00:00:33 | ~0.01 % |   4.53MB / ~45600.00MB | kB/s:   119 | accounts 17401 | nodes 39809 | diagnostics: 3.13.65ms 
+2020-07-16 13:01:29.2987|INFO|68|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:29.2987|INFO|68|Old Headers     75456 / 10440000 | queue   576 | current  6152.01bps | total  1291.04bps 
+2020-07-16 13:01:29.8697|INFO|12|State Sync 00.00:00:34 | ~0.01 % |   4.67MB / ~45600.00MB | kB/s:   113 | accounts 17401 | nodes 41647 | diagnostics: 3.13.65ms 
+2020-07-16 13:01:30.2987|INFO|76|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:30.2987|INFO|76|Old Headers     76608 / 10440000 | queue  1536 | current  1152.10bps | total  1288.69bps 
+2020-07-16 13:01:31.0226|INFO|73|State Sync 00.00:00:35 | ~0.01 % |   4.83MB / ~45600.00MB | kB/s:   143 | accounts 17401 | nodes 43843 | diagnostics: 3.13.62ms 
+2020-07-16 13:01:31.2999|INFO|74|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:31.2999|INFO|74|Old Headers     76608 / 10440000 | queue  3648 | current     0.00bps | total  1267.30bps 
+2020-07-16 13:01:32.1504|INFO|74|State Sync 00.00:00:36 | ~0.01 % |   4.95MB / ~45600.00MB | kB/s:   102 | accounts 17401 | nodes 45418 | diagnostics: 3.13.89ms 
+2020-07-16 13:01:32.2998|INFO|69|Peers | with known best block: 7 | all: 7 | 
+2020-07-16 13:01:32.2998|INFO|69|Old Headers     76608 / 10440000 | queue  5376 | current     0.00bps | total  1246.62bps 
+2020-07-16 13:01:33.2489|INFO|74|State Sync 00.00:00:37 | ~0.01 % |   5.09MB / ~45600.00MB | kB/s:   128 | accounts 17401 | nodes 47296 | diagnostics: 3.13.89ms 
+2020-07-16 13:01:33.3000|INFO|67|Peers | with known best block: 7 | all: 8 | 
+2020-07-16 13:01:33.3000|INFO|67|Old Headers     78912 / 10440000 | queue  5184 | current  2303.70bps | total  1263.59bps 
+2020-07-16 13:01:34.2985|INFO|12|Peers | with known best block: 7 | all: 9 | 
+2020-07-16 13:01:34.2985|INFO|12|Old Headers     82944 / 10440000 | queue  3456 | current  4038.03bps | total  1307.36bps 
+2020-07-16 13:01:34.4059|INFO|72|State Sync 00.00:00:38 | ~0.01 % |   5.25MB / ~45600.00MB | kB/s:   139 | accounts 17401 | nodes 49484 | diagnostics: 3.13.89ms 

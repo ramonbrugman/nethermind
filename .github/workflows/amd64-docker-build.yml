@@ -43,6 +43,12 @@ jobs:
       - name: Trigger docker smoke test
         run: |
           curl ${{ secrets.BUILD_SERVER }}/smoke-docker
+      - name: Vulnerability Scan with Trivy
+        uses: homoluctus/gitrivy@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image: ${{ steps.settings.outputs.docker_image }}:${{ steps.settings.outputs.TAG }}
+          issue_assignee: matilote
       - name: Clear
         if: always()
         run: |
