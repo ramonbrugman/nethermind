@@ -71,6 +71,7 @@ namespace Nethermind.KeyStore
         {
             var whitespaces = new List<char>();
             var secureString = new SecureString();
+            var passStarted = false;
             using (StreamReader stream = new StreamReader(filePath))
             {
                 while (stream.Peek() >= 0)
@@ -78,14 +79,16 @@ namespace Nethermind.KeyStore
                     var character = (char)stream.Read();
                     if (char.IsWhiteSpace(character))
                     {
-                        whitespaces.Add(character);
+                        if (passStarted)
+                            whitespaces.Add(character);
                     }
                     else
                     {
+                        passStarted = true;
                         if (whitespaces.Count != 0)
                         {
                             FillWhitespaceList(secureString, whitespaces);
-                            whitespaces = new List<char>();
+                            whitespaces.Clear();
                         }
 
                         secureString.AppendChar(character);

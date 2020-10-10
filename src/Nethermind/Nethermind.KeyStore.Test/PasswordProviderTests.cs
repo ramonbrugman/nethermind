@@ -35,7 +35,8 @@ namespace Nethermind.KeyStore.Test
         {
             ("TestingPasswordProviderFileF1", "PF1"),
             ("TestingPasswordProviderFileF2", "P    F2"),
-            ("TestingPasswordProviderFileF3", "P    F3    ")
+            ("TestingPasswordProviderFileF3", "P    F3    "),
+            ("TestingPasswordProviderFileF4", " P    F3")
         };
 
         [SetUp]
@@ -108,6 +109,16 @@ namespace Nethermind.KeyStore.Test
                     ExpectedPasswords = new[] { _files[2].Content.Trim() },
                     BlockAuthorAccount = TestItem.AddressA,
                     ExpectectedBlockAuthorAccountPassword = _files[2].Content.Trim()
+                };
+
+                yield return new PasswordProviderTest()
+                {
+                    UnlockAccounts = new[] { TestItem.AddressA },
+                    Passwords = new[] { "A", "B" },
+                    PasswordFiles = new List<string> { _files[3].Name },
+                    ExpectedPasswords = new[] { _files[3].Content.Trim() },
+                    BlockAuthorAccount = TestItem.AddressA,
+                    ExpectectedBlockAuthorAccountPassword = _files[3].Content.Trim()
                 };
             }
         }
