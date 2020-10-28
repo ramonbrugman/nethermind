@@ -1,6 +1,7 @@
 name: Secp256k1 Build
 
 on:
+  push:
   workflow_dispatch:
 
 jobs:
