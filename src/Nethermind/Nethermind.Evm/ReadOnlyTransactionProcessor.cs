@@ -51,5 +51,11 @@ namespace Nethermind.Evm
             _stateProvider.StateRoot = _stateBefore;
             _stateProvider.Reset();
         }
+
+        public bool ContractExists(Address contractAddress)
+        {
+            Account account = _stateProvider.GetAccount(contractAddress);
+            return account != null && account.HasCode;
+        }
     }
 }

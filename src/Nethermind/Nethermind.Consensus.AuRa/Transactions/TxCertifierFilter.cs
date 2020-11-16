@@ -67,7 +67,7 @@ namespace Nethermind.Consensus.AuRa.Transactions
             }
             catch (AbiException e)
             {
-                if (_logger.IsError) _logger.Error($"Call to certifier contract failed.", e);
+                if (_logger.IsWarn) _logger.Warn($"Call to certifier contract failed. {e}");
                 return false;
             }
         }

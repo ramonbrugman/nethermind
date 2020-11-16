@@ -16,6 +16,7 @@
 // 
 
 using System;
+using Nethermind.Abi;
 using Nethermind.Core;
 using Nethermind.Core.Crypto;
 using Nethermind.Evm;
@@ -50,7 +51,16 @@ namespace Nethermind.Blockchain.Contracts
             private byte[] Call(BlockHeader parentHeader, string functionName, Transaction transaction)
             {
                 using var readOnlyTransactionProcessor = _readOnlyTransactionProcessorSource.Get(GetState(parentHeader));
-                return _contract.CallCore(readOnlyTransactionProcessor, parentHeader, functionName, transaction, true);
+                Address contractAddress = _contract.ContractAddress;
+                if (readOnlyTransactionProcessor.ContractExists(contractAddress))
+                {
+                    return _contract.CallCore(readOnlyTransactionProcessor, parentHeader, functionName, transaction, true);
+                }
+                else
+                {
+                    var functionInfo = _contract.AbiDefinition.GetFunction(functionName);
+                    throw new AbiException($"Function {functionInfo.GetReturnInfo().Signature} for contract {contractAddress} does not exist.");
+                }
             }
 
             private object[] Call(BlockHeader parentHeader, string functionName, Address sender, params object[] arguments)
