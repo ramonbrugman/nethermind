@@ -247,7 +247,7 @@ namespace Nethermind.Evm
                 {
                     byte[] beforeResize = _memory;
                     _memory = Pool.Rent(_memory.Length * 2);
-                    Array.Copy(beforeResize, 0, _memory, 0, _memory.Length);
+                    Array.Copy(beforeResize, 0, _memory, 0, beforeResize.Length);
                     Array.Clear(_memory, beforeResize.Length, beforeResize.Length);
                     Pool.Return(beforeResize);
                 }
