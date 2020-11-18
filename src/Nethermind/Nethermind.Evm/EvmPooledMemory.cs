@@ -28,8 +28,6 @@ namespace Nethermind.Evm
         private static readonly ArrayPool<byte> Pool = ArrayPool<byte>.Shared;
         private static int MinRentSize = 256; 
 
-        private int _lastZeroedSize;
-
         private byte[] _memory;
         public uint Length { get; private set; }
         public uint Size { get; private set; }
@@ -243,22 +241,16 @@ namespace Nethermind.Evm
                 if (_memory == null)
                 {
                     _memory = Pool.Rent(MinRentSize);
-                    Array.Clear(_memory, 0, (int)Size);
+                    Array.Clear(_memory, 0, _memory.Length);
                 }
                 else if (Size > (ulong)_memory.LongLength)
                 {
                     byte[] beforeResize = _memory;
                     _memory = Pool.Rent(_memory.Length * 2);
-                    Array.Copy(beforeResize, 0, _memory, 0, _lastZeroedSize);
-                    Array.Clear(_memory, _lastZeroedSize, (int)Size - _lastZeroedSize);
+                    Array.Copy(beforeResize, 0, _memory, 0, _memory.Length);
+                    Array.Clear(_memory, beforeResize.Length, beforeResize.Length);
                     Pool.Return(beforeResize);
                 }
-                else if (Size > (ulong)_lastZeroedSize)
-                {
-                    Array.Clear(_memory, _lastZeroedSize, (int)Size - _lastZeroedSize);
-                }
-
-                _lastZeroedSize = (int)Size;
             }
         }
     }
