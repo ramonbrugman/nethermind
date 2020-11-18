@@ -22,7 +22,7 @@ namespace Nethermind.Evm
 {
     public interface IEvmMemory : IDisposable
     {
-        ulong Size { get; }
+        uint Size { get; }
         void SaveWord(in UInt256 location, Span<byte> word);
         void SaveByte(in UInt256 location, byte value);
         void Save(in UInt256 location, Span<byte> value);

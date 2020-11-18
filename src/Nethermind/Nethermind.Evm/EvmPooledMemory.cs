@@ -26,12 +26,14 @@ namespace Nethermind.Evm
     {
         public const int WordSize = 32;
         private static readonly ArrayPool<byte> Pool = ArrayPool<byte>.Shared;
+        private static uint MinRentSize = 256; 
 
         private int _lastZeroedSize;
 
         private byte[] _memory;
-        public ulong Length { get; private set; }
-        public ulong Size { get; private set; }
+        public uint Length { get; private set; }
+        public uint Size { get; private set; }
+        
 
         public void SaveWord(in UInt256 location, Span<byte> word)
         {
@@ -222,13 +224,13 @@ namespace Nethermind.Evm
 
         private void UpdateSize(in UInt256 position, in UInt256 length, bool rentIfNeeded = true)
         {
-            Length = (ulong)(position + length);
+            Length = (uint)(position + length);
             if (Length > Size)
             {
                 ulong remainder = Length % WordSize;
                 if (remainder != 0)
                 {
-                    Size = Length + WordSize - remainder;
+                    Size = (uint) (Length + WordSize - remainder);
                 }
                 else
                 {
@@ -240,13 +242,13 @@ namespace Nethermind.Evm
             {
                 if (_memory == null)
                 {
-                    _memory = Pool.Rent((int)Size);
+                    _memory = Pool.Rent((int)GetRentSize(Size));
                     Array.Clear(_memory, 0, (int)Size);
                 }
                 else if (Size > (ulong)_memory.LongLength)
                 {
                     byte[] beforeResize = _memory;
-                    _memory = Pool.Rent((int)Size);
+                    _memory = Pool.Rent((int)GetRentSize(Size));
                     Array.Copy(beforeResize, 0, _memory, 0, _lastZeroedSize);
                     Array.Clear(_memory, _lastZeroedSize, (int)Size - _lastZeroedSize);
                     Pool.Return(beforeResize);
@@ -258,6 +260,24 @@ namespace Nethermind.Evm
 
                 _lastZeroedSize = (int)Size;
             }
+        }
+
+        private uint GetRentSize(uint x)
+        {
+            uint GetNextPow2()
+            {
+                // nearest power of 2
+                x--;
+                x |= (x >> 1);
+                x |= (x >> 2);
+                x |= (x >> 4);
+                x |= (x >> 8);
+                x |= (x >> 16);
+                x++;
+                return x;
+            }
+
+            return x <= MinRentSize ? MinRentSize : GetNextPow2();
         }
     }
 }
