@@ -26,7 +26,7 @@ namespace Nethermind.Evm
     {
         public const int WordSize = 32;
         private static readonly ArrayPool<byte> Pool = ArrayPool<byte>.Shared;
-        private static uint MinRentSize = 256; 
+        private static int MinRentSize = 256; 
 
         private int _lastZeroedSize;
 
@@ -242,13 +242,13 @@ namespace Nethermind.Evm
             {
                 if (_memory == null)
                 {
-                    _memory = Pool.Rent((int)GetRentSize(Size));
+                    _memory = Pool.Rent(MinRentSize);
                     Array.Clear(_memory, 0, (int)Size);
                 }
                 else if (Size > (ulong)_memory.LongLength)
                 {
                     byte[] beforeResize = _memory;
-                    _memory = Pool.Rent((int)GetRentSize(Size));
+                    _memory = Pool.Rent(_memory.Length * 2);
                     Array.Copy(beforeResize, 0, _memory, 0, _lastZeroedSize);
                     Array.Clear(_memory, _lastZeroedSize, (int)Size - _lastZeroedSize);
                     Pool.Return(beforeResize);
@@ -260,24 +260,6 @@ namespace Nethermind.Evm
 
                 _lastZeroedSize = (int)Size;
             }
-        }
-
-        private uint GetRentSize(uint x)
-        {
-            uint GetNextPow2()
-            {
-                // nearest power of 2
-                x--;
-                x |= (x >> 1);
-                x |= (x >> 2);
-                x |= (x >> 4);
-                x |= (x >> 8);
-                x |= (x >> 16);
-                x++;
-                return x;
-            }
-
-            return x <= MinRentSize ? MinRentSize : GetNextPow2();
         }
     }
 }
