@@ -54,6 +54,9 @@ jobs:
     - name: Nethermind.Core.Test
       run: |
         dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Nethermind.Core.Test
+    - name: Nethermind.Core.Cryptography.Test
+      run: |
+        dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Nethermind.Core.Cryptography.Test
     - name: Nethermind.Core2.Configuration.Test
       run: |
         dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Nethermind.Core2.Configuration.Test
@@ -96,6 +99,9 @@ jobs:
     - name: Nethermind.State.Test
       run: |
         dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Nethermind.State.Test
+    - name: Nethermind.State.Test.Runner.Test
+      run: |
+        dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Nethermind.State.Test.Runner.Test
     - name: Nethermind.Ssz.Test
       run: |
         dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Nethermind.Ssz.Test
@@ -117,6 +123,9 @@ jobs:
     - name: Nethermind.DataMarketplace.Infrastructure.Test
       run: |
         dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Nethermind.DataMarketplace.Infrastructure.Test
+    - name: Nethermind.DataMarketplace.Integration.Test
+      run: |
+        dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Nethermind.DataMarketplace.Integration.Test
     - name: Nethermind.DataMarketplace.Subprotocols.Test
       run: |
         dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Nethermind.DataMarketplace.Subprotocols.Test
@@ -175,6 +184,9 @@ jobs:
     - name: Ethereum.Trie.Test
       run: |
         dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Ethereum.Trie.Test
+    - name: Ethereum.VM.Test
+      run: |
+        dotnet test -c Release $EXCLUDE_TEST_PROJECTS src/Nethermind/Ethereum.VM.Test
     - name: Upload Codecov Report
       uses: actions/upload-artifact@v2
       with:
