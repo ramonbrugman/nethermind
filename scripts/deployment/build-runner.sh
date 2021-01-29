@@ -21,20 +21,20 @@ sed -i "12i$RID_PATH_LINUX" ../Nethermind.Cli/Nethermind.Cli.csproj
 sed -i "11i$RID_PATH_LINUX" Nethermind.Runner.csproj
 dotnet publish -c release -r $LINUX -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$LIN_RELEASE
 
-sed -i "s/$RID_PATH_LINUX/$RID_PATH_OSX/g" ../Nethermind.Cli/Nethermind.Cli.csproj
-sed -i "s/$RID_PATH_LINUX/$RID_PATH_OSX/g" Nethermind.Runner.csproj
+sed -i "12s|.*|$RID_PATH_OSX|" ../Nethermind.Cli/Nethermind.Cli.csproj
+sed -i "11s|.*|$RID_PATH_OSX|" Nethermind.Runner.csproj
 dotnet publish -c release -r $OSX -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$OSX_RELEASE
 
-sed -i "s/$RID_PATH_OSX/$RID_PATH_WIN10/g" ../Nethermind.Cli/Nethermind.Cli.csproj
-sed -i "s/$RID_PATH_OSX/$RID_PATH_WIN10/g" Nethermind.Runner.csproj
+sed -i "12s|.*|$RID_PATH_WIN10|" ../Nethermind.Cli/Nethermind.Cli.csproj
+sed -i "11s|.*|$RID_PATH_WIN10|" Nethermind.Runner.csproj
 dotnet publish -c release -r $WIN10 -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$WIN_RELEASE
 
-sed -i "s/$RID_PATH_WIN10/$RID_PATH_LINUX_ARM/g" ../Nethermind.Cli/Nethermind.Cli.csproj
-sed -i "s/$RID_PATH_WIN10/$RID_PATH_LINUX_ARM/g" Nethermind.Runner.csproj
+sed -i "12s|.*|$RID_PATH_LINUX_ARM|" ../Nethermind.Cli/Nethermind.Cli.csproj
+sed -i "11s|.*|$RID_PATH_LINUX_ARM|" Nethermind.Runner.csproj
 dotnet publish -c release -r $LINUX_ARM -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$LIN_ARM_RELEASE
 
-sed -i "s/$RID_PATH_LINUX_ARM/$RID_PATH_LINUX_ARM64/g" ../Nethermind.Cli/Nethermind.Cli.csproj
-sed -i "s/$RID_PATH_LINUX_ARM/$RID_PATH_LINUX_ARM64/g" Nethermind.Runner.csproj
+sed -i "12s|.*|$RID_PATH_LINUX_ARM64|" ../Nethermind.Cli/Nethermind.Cli.csproj
+sed -i "11s|.*|$RID_PATH_LINUX_ARM64|" Nethermind.Runner.csproj
 dotnet publish -c release -r $LINUX_ARM64 -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$LIN_ARM64_RELEASE
 
 rm -rf $OUT/$LIN_RELEASE/Data
