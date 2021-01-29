@@ -12,10 +12,19 @@ echo Publishing Nethermind Runner for different platforms...
 echo =======================================================
 echo Nethermind Runner path: $RUNNER_PATH
 
+sed -i "12i/        <RuntimeIdentifier>$LINUX</RuntimeIdentifier>/" ../Nethermind.Cli/Nethermind.Cli.csproj
 dotnet publish -c release -r $LINUX -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$LIN_RELEASE
+
+sed -i "12i/        <RuntimeIdentifier>$OSX</RuntimeIdentifier>/" ../Nethermind.Cli/Nethermind.Cli.csproj
 dotnet publish -c release -r $OSX -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$OSX_RELEASE
+
+sed -i "12i/        <RuntimeIdentifier>$WIN10</RuntimeIdentifier>/" ../Nethermind.Cli/Nethermind.Cli.csproj
 dotnet publish -c release -r $WIN10 -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$WIN_RELEASE
+
+sed -i "12i/        <RuntimeIdentifier>$LINUX_ARM</RuntimeIdentifier>/" ../Nethermind.Cli/Nethermind.Cli.csproj
 dotnet publish -c release -r $LINUX_ARM -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$LIN_ARM_RELEASE
+
+sed -i "12i/        <RuntimeIdentifier>$LINUX_ARM64</RuntimeIdentifier>/" ../Nethermind.Cli/Nethermind.Cli.csproj
 dotnet publish -c release -r $LINUX_ARM64 -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$LIN_ARM64_RELEASE
 
 rm -rf $OUT/$LIN_RELEASE/Data
