@@ -4,6 +4,11 @@ set -e
 RUNNER_PATH=$RELEASE_DIRECTORY/nethermind/src/Nethermind/Nethermind.Runner
 PUBLISH_PATH=bin/release/net5.0
 OUT=out
+RID_PATH_LINUX="\        <RuntimeIdentifier>$LINUX</RuntimeIdentifier>"
+RID_PATH_OSX="\        <RuntimeIdentifier>$OSX</RuntimeIdentifier>"
+RID_PATH_WIN10="\        <RuntimeIdentifier>$WIN10</RuntimeIdentifier>"
+RID_PATH_LINUX_ARM="\        <RuntimeIdentifier>$LINUX_ARM</RuntimeIdentifier>"
+RID_PATH_LINUX_ARM64="\        <RuntimeIdentifier>$LINUX_ARM64</RuntimeIdentifier>"
 
 cd $RUNNER_PATH
 
@@ -12,19 +17,19 @@ echo Publishing Nethermind Runner for different platforms...
 echo =======================================================
 echo Nethermind Runner path: $RUNNER_PATH
 
-sed -i "12i/        <RuntimeIdentifier>$LINUX</RuntimeIdentifier>/" ../Nethermind.Cli/Nethermind.Cli.csproj
+sed -i "12i$RID_PATH_LINUX" ../Nethermind.Cli/Nethermind.Cli.csproj
 dotnet publish -c release -r $LINUX -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$LIN_RELEASE
 
-sed -i "12i/        <RuntimeIdentifier>$OSX</RuntimeIdentifier>/" ../Nethermind.Cli/Nethermind.Cli.csproj
+sed -i "12i$RID_PATH_OSX" ../Nethermind.Cli/Nethermind.Cli.csproj
 dotnet publish -c release -r $OSX -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$OSX_RELEASE
 
-sed -i "12i/        <RuntimeIdentifier>$WIN10</RuntimeIdentifier>/" ../Nethermind.Cli/Nethermind.Cli.csproj
+sed -i "12i$RID_PATH_WIN10" ../Nethermind.Cli/Nethermind.Cli.csproj
 dotnet publish -c release -r $WIN10 -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$WIN_RELEASE
 
-sed -i "12i/        <RuntimeIdentifier>$LINUX_ARM</RuntimeIdentifier>/" ../Nethermind.Cli/Nethermind.Cli.csproj
+sed -i "12i$RID_PATH_LINUX_ARM" ../Nethermind.Cli/Nethermind.Cli.csproj
 dotnet publish -c release -r $LINUX_ARM -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$LIN_ARM_RELEASE
 
-sed -i "12i/        <RuntimeIdentifier>$LINUX_ARM64</RuntimeIdentifier>/" ../Nethermind.Cli/Nethermind.Cli.csproj
+sed -i "12i$RID_PATH_LINUX_ARM64" ../Nethermind.Cli/Nethermind.Cli.csproj
 dotnet publish -c release -r $LINUX_ARM64 -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -o $OUT/$LIN_ARM64_RELEASE
 
 rm -rf $OUT/$LIN_RELEASE/Data
