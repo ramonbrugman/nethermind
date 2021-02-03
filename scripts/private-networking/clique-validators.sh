@@ -3,10 +3,15 @@
 set -e
 DEBIAN_FRONTEND=noninteractive
 
-# Install required packages
-#sudo apt-get install -y docker-compose docker.io jq pwgen
-
 main() {
+
+read -p "Do you want to install required packages (docker, docker-compose, pwgen, jq) (y/n)? " choice
+case "$choice" in 
+  y|Y ) installPackages;;
+  n|N ) echo "No";;
+  * ) echo "Invalid input, type (y|Y or n|N)." && exit 1;;
+esac
+
 mkdir private-networking
 cd private-networking
 
@@ -68,14 +73,12 @@ do
     done
     STATIC_NODE=$(curl -sf -X POST --data '{"jsonrpc":"2.0","method":"parity_enode","params":[],"id":67}' localhost:$JSONRPC_PORT | jq '.result')
     printf "\nStatic node for node_$i: $STATIC_NODE\n"
-    # FORMATTING DUE TO THE INCORRECT EXTERNAL IP (probably temporary solution)
-    STATIC_NODE_FORMATTED=${STATIC_NODE%%@*}@$PRIVATE_IP:$PORT
+    # # FORMATTING DUE TO THE INCORRECT EXTERNAL IP (probably temporary solution)
+    # STATIC_NODE_FORMATTED=${STATIC_NODE%%@*}@$PRIVATE_IP:$PORT
     if [ $i -ne $validators ];then
-        echo $i
-        echo "    $STATIC_NODE_FORMATTED\"," >> static-nodes-updated.json
+        echo "    $STATIC_NODE," >> static-nodes-updated.json
     else
-        echo "ELSE: $i"
-        echo "    $STATIC_NODE_FORMATTED\"" >> static-nodes-updated.json
+        echo "    $STATIC_NODE" >> static-nodes-updated.json
     fi
 done
 
@@ -171,7 +174,7 @@ EOF
 function writeDockerComposeService() {
 cat <<EOF >> docker-compose.yml
     node_$1:
-        image: nethermind/nethermind:1.10.14
+        image: nethermind/nethermind:1.10.17
         container_name: node_$1
         command: --config config
         volumes:
@@ -202,6 +205,60 @@ function writeExtraData() {
     EXTRA_DATA=${EXTRA_VANITY}${SIGNERS}${EXTRA_SEAL}
     echo "EXTRA_DATA: $EXTRA_DATA"
     cat goerli.json | jq '.genesis.extraData = '\"$EXTRA_DATA\"'' > genesis/goerli.json
+}
+
+function installPackages() {
+    # Install required packages
+    YUM_PACKAGE_NAME="docker-compose docker.io jq pwgen"
+    DEB_PACKAGE_NAME="docker-compose docker.io jq pwgen"
+    MAC_PACKAGE_NAME="docker docker-compose jq pwgen"
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if cat /etc/*release | grep ^NAME | grep CentOS; then
+        echo "==============================================="
+        echo "Installing packages $YUM_PACKAGE_NAME on CentOS"
+        echo "==============================================="
+        yum install -y $YUM_PACKAGE_NAME
+    elif cat /etc/*release | grep ^NAME | grep Red; then
+        echo "==============================================="
+        echo "Installing packages $YUM_PACKAGE_NAME on RedHat"
+        echo "==============================================="
+        yum install -y $YUM_PACKAGE_NAME
+    elif cat /etc/*release | grep ^NAME | grep Fedora; then
+        echo "================================================"
+        echo "Installing packages $YUM_PACKAGE_NAME on Fedora"
+        echo "================================================"
+        yum install -y $YUM_PACKAGE_NAME
+    elif cat /etc/*release | grep ^NAME | grep Ubuntu; then
+        echo "==============================================="
+        echo "Installing packages $DEB_PACKAGE_NAME on Ubuntu"
+        echo "==============================================="
+        sudo apt-get install -y $DEB_PACKAGE_NAME
+    elif cat /etc/*release | grep ^NAME | grep Debian ; then
+        echo "==============================================="
+        echo "Installing packages $DEB_PACKAGE_NAME on Debian"
+        echo "==============================================="
+        sudo apt-get install -y $DEB_PACKAGE_NAME
+    elif cat /etc/*release | grep ^NAME | grep Mint ; then
+        echo "============================================="
+        echo "Installing packages $DEB_PACKAGE_NAME on Mint"
+        echo "============================================="
+        apt-get update
+        apt-get install -y $DEB_PACKAGE_NAME
+    else
+        echo "=============================================================="
+        echo "Linux distribution was not detected, couldn't install packages"
+        echo "=============================================================="
+        exit 1;
+    fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "============================================="
+        echo "Installing packages $MAC_PACKAGE_NAME on MacOS"
+        echo "============================================="
+        brew install $MAC_PACKAGE_NAME
+    else
+        echo "OS was not detected, couldn't install packages"
+        exit 1;
+    fi
 }
 
 main
