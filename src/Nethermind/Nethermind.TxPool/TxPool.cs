@@ -226,7 +226,7 @@ namespace Nethermind.TxPool
                                          TxHandlingOptions.PersistentBroadcast;
             if (_logger.IsTrace)
                 _logger.Trace(
-                    $"Adding transaction {tx.ToString("  ")} - managed nonce: {managedNonce} | persistent broadcast {isPersistentBroadcast}");
+                    $"Adding transaction {tx.ToShortString()} - managed nonce: {managedNonce} | persistent broadcast {isPersistentBroadcast}");
 
             return FilterTransaction(tx, managedNonce) ?? AddCore(tx, isPersistentBroadcast);
         }
@@ -236,6 +236,11 @@ namespace Nethermind.TxPool
             // !!! do not change it to |=
             bool isKnown = _hashCache.Get(tx.Hash);
 
+            if (isKnown)
+            {
+                if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToShortString()}, already known in hash cache.");
+            }
+
             /*
              * we need to make sure that the sender is resolved before adding to the distinct tx pool
              * as the address is used in the distinct value calculation
@@ -243,18 +248,26 @@ namespace Nethermind.TxPool
             if (!isKnown)
             {
                 isKnown |= !_transactions.TryInsert(tx.Hash, tx);
+                if (isKnown)
+                    if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToShortString()}, already known in transactions.");
             }
 
             if (!isKnown)
             {
                 isKnown |= _txStorage.Get(tx.Hash) != null;
+                if (isKnown)
+                    if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToShortString()}, already known in storage.");
             }
 
             if (isKnown)
             {
                 // If transaction is a bit older and already known then it may be stored in the persistent storage.
                 Metrics.PendingTransactionsKnown++;
-                if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToString("  ")}, already known.");
+                if (_transactions.TryGetValue(tx.Hash, out _))
+                {
+                    if (_logger.IsTrace) _logger.Trace($"Skipped transaction {tx.ToShortString()}, is not in _transactions.");
+                }
+                
                 return AddTxResult.AlreadyKnown;
             }
 
@@ -276,7 +289,7 @@ namespace Nethermind.TxPool
                 _fadingOwnTransactions.TryRemove(tx.Hash, out (Transaction Tx, long _) fadingTxHolder);
                 _ownTransactions.TryAdd(fadingTxHolder.Tx.Hash, fadingTxHolder.Tx);
                 _ownTimer.Enabled = true;
-                if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToString("  ")}, already known.");
+                if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToShortString()}, already known in fadingTransactions.");
                 return AddTxResult.Added;
             }
 
@@ -293,7 +306,7 @@ namespace Nethermind.TxPool
             {
                 // It may happen that other nodes send us transactions that were signed for another chain.
                 Metrics.PendingTransactionsDiscarded++;
-                if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToString("  ")}, wrong chain.");
+                if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToShortString()}, wrong chain.");
                 return AddTxResult.InvalidChainId;
             }
 
@@ -305,7 +318,7 @@ namespace Nethermind.TxPool
             if (managedNonce && CheckOwnTransactionAlreadyUsed(tx))
             {
                 if (_logger.IsTrace)
-                    _logger.Trace($"Skipped adding transaction {tx.ToString("  ")}, nonce already used.");
+                    _logger.Trace($"Skipped adding transaction {tx.ToShortString()}, nonce already used.");
                 return AddTxResult.OwnNonceAlreadyUsed;
             }
 
@@ -318,7 +331,7 @@ namespace Nethermind.TxPool
                 tx.SenderAddress = _ecdsa.RecoverAddress(tx);
                 if (tx.SenderAddress is null)
                 {
-                    if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToString("  ")}, no sender.");
+                    if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToShortString()}, no sender.");
                     return AddTxResult.PotentiallyUseless;
                 }
             }
@@ -333,7 +346,7 @@ namespace Nethermind.TxPool
                 _ownTransactions.TryAdd(tx.Hash, tx);
                 _ownTimer.Enabled = true;
                 if (_logger.IsDebug) _logger.Debug($"Broadcasting own transaction {tx.Hash} to {_peers.Count} peers");
-                if (_logger.IsTrace) _logger.Trace($"Broadcasting transaction {tx.ToString("  ")}");
+                if (_logger.IsTrace) _logger.Trace($"Broadcasting transaction {tx.ToShortString()}");
             }
         }
 
@@ -413,6 +426,9 @@ namespace Nethermind.TxPool
             {
                 if (_transactions.TryRemove(hash, out transaction, out bucket))
                 {
+                    if (_logger.IsTrace)
+                        _logger.Trace($"Removing transaction {transaction.ToShortString()} from TxPool");
+
                     RemovedPending?.Invoke(this, new TxEventArgs(transaction));
                 }
             }
@@ -423,7 +439,7 @@ namespace Nethermind.TxPool
                 if (ownIncluded)
                 {
                     _fadingOwnTransactions.TryAdd(hash, (fadingTx, blockNumber));
-                    if (_logger.IsInfo)
+                    if (_logger.IsTrace)
                         _logger.Trace($"Transaction {hash} created on this node was included in the block");
                 }
             }
@@ -532,7 +548,7 @@ namespace Nethermind.TxPool
         private void StoreTx(Transaction tx)
         {
             _txStorage.Add(tx);
-            if (_logger.IsTrace) _logger.Trace($"Added a transaction: {tx.Hash}");
+            if (_logger.IsTrace) _logger.Trace($"Added a transaction: {tx.ToShortString()}");
         }
 
         private void OwnTimerOnElapsed(object sender, ElapsedEventArgs e)
