@@ -247,7 +247,15 @@ namespace Nethermind.TxPool
              */
             if (!isKnown)
             {
-                isKnown |= !_transactions.TryInsert(tx.Hash, tx);
+                bool inserted = _transactions.TryInsert(tx.Hash, tx);
+                if (inserted)
+                {
+                    if (!_transactions.TryGetValue(tx.Hash, out _))
+                    {
+                        if (_logger.IsTrace) _logger.Trace($"Transaction wasn't inserted {tx.ToShortString()}");
+                    }
+                }
+                isKnown |= !inserted;
                 if (isKnown)
                     if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToShortString()}, already known in transactions.");
             }
