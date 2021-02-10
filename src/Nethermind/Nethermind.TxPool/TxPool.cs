@@ -271,7 +271,7 @@ namespace Nethermind.TxPool
             {
                 // If transaction is a bit older and already known then it may be stored in the persistent storage.
                 Metrics.PendingTransactionsKnown++;
-                if (_transactions.TryGetValue(tx.Hash, out _))
+                if (!_transactions.TryGetValue(tx.Hash, out _))
                 {
                     if (_logger.IsTrace) _logger.Trace($"Skipped transaction {tx.ToShortString()}, is not in _transactions.");
                 }
@@ -283,8 +283,9 @@ namespace Nethermind.TxPool
             _hashCache.Set(tx.Hash);
 
             HandleOwnTransaction(tx, isPersistentBroadcast);
-
-            NotifySelectedPeers(tx);
+            
+            NotifyAllPeers(tx);
+            // NotifySelectedPeers(tx);
             StoreTx(tx);
             NewPending?.Invoke(this, new TxEventArgs(tx));
             return AddTxResult.Added;
@@ -556,7 +557,7 @@ namespace Nethermind.TxPool
         private void StoreTx(Transaction tx)
         {
             _txStorage.Add(tx);
-            if (_logger.IsTrace) _logger.Trace($"Added a transaction: {tx.ToShortString()}");
+            if (_logger.IsDebug) _logger.Debug($"Added a transaction: {tx.ToShortString()}");
         }
 
         private void OwnTimerOnElapsed(object sender, ElapsedEventArgs e)
