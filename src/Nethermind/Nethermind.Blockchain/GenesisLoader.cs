@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -38,7 +38,6 @@ namespace Nethermind.Blockchain
         private readonly ISpecProvider _specProvider;
         private readonly IStateProvider _stateProvider;
         private readonly IStorageProvider _storageProvider;
-        private readonly IDbProvider _dbProvider;
         private readonly ITransactionProcessor _transactionProcessor;
 
         public GenesisLoader(
@@ -46,20 +45,37 @@ namespace Nethermind.Blockchain
             ISpecProvider specProvider,
             IStateProvider stateProvider,
             IStorageProvider storageProvider,
-            IDbProvider dbProvider,
             ITransactionProcessor transactionProcessor)
         {
             _chainSpec = chainSpec ?? throw new ArgumentNullException(nameof(chainSpec));
             _specProvider = specProvider ?? throw new ArgumentNullException(nameof(specProvider));
             _stateProvider = stateProvider ?? throw new ArgumentNullException(nameof(stateProvider));
             _storageProvider = storageProvider ?? throw new ArgumentNullException(nameof(storageProvider));
-            _dbProvider = dbProvider ?? throw new ArgumentNullException(nameof(dbProvider));
             _transactionProcessor = transactionProcessor ?? throw new ArgumentNullException(nameof(transactionProcessor));
         }
         
         public Block Load()
         {
             Block genesis = _chainSpec.Genesis;
+            Preallocate(genesis);
+            
+            // we no longer need the allocations - 0.5MB RAM, 9000 objects for mainnet
+            _chainSpec.Allocations = null;
+
+            _storageProvider.Commit();
+            _stateProvider.Commit(_specProvider.GenesisSpec);
+
+            _storageProvider.CommitTrees(0);
+            _stateProvider.CommitTree(0);
+
+            genesis.Header.StateRoot = _stateProvider.StateRoot;
+            genesis.Header.Hash = genesis.Header.CalculateHash();
+            
+            return genesis;
+        }
+
+        private void Preallocate(Block genesis)
+        {
             foreach ((Address address, ChainSpecAllocation allocation) in _chainSpec.Allocations.OrderBy(a => a.Key))
             {
                 _stateProvider.CreateAccount(address, allocation.Balance);
@@ -74,7 +90,8 @@ namespace Nethermind.Blockchain
                 {
                     foreach (KeyValuePair<UInt256, byte[]> storage in allocation.Storage)
                     {
-                        _storageProvider.Set(new StorageCell(address, storage.Key), storage.Value.WithoutLeadingZeros().ToArray());
+                        _storageProvider.Set(new StorageCell(address, storage.Key),
+                            storage.Value.WithoutLeadingZeros().ToArray());
                     }
                 }
 
@@ -83,36 +100,20 @@ namespace Nethermind.Blockchain
                     Transaction constructorTransaction = new SystemTransaction()
                     {
                         SenderAddress = address,
-                        Init = allocation.Constructor,
+                        Data = allocation.Constructor,
                         GasLimit = genesis.GasLimit
                     };
 
-                    CallOutputTracer outputTracer = new CallOutputTracer();
+                    CallOutputTracer outputTracer = new();
                     _transactionProcessor.Execute(constructorTransaction, genesis.Header, outputTracer);
 
                     if (outputTracer.StatusCode != StatusCode.Success)
                     {
-                        throw new InvalidOperationException($"Failed to initialize constructor for address {address}. Error: {outputTracer.Error}");
+                        throw new InvalidOperationException(
+                            $"Failed to initialize constructor for address {address}. Error: {outputTracer.Error}");
                     }
                 }
             }
-            
-            // we no longer need the allocations - 0.5MB RAM, 9000 objects for mainnet
-            _chainSpec.Allocations = null;
-
-            _storageProvider.Commit();
-            _stateProvider.Commit(_specProvider.GenesisSpec);
-
-            _storageProvider.CommitTrees();
-            _stateProvider.CommitTree();
-
-            _dbProvider.StateDb.Commit();
-            _dbProvider.CodeDb.Commit();
-            
-            genesis.Header.StateRoot = _stateProvider.StateRoot;
-            genesis.Header.Hash = genesis.Header.CalculateHash();
-            
-            return genesis;
         }
     }
 }

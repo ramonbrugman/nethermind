@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ namespace Nethermind.JsonRpc.Modules.Trace
         private readonly IReceiptFinder _receiptFinder;
         private readonly ITracer _tracer;
         private readonly IBlockFinder _blockFinder;
-        private readonly TransactionDecoder _txDecoder = new TransactionDecoder();
+        private readonly TxDecoder _txDecoder = new TxDecoder();
         private readonly IJsonRpcConfig _jsonRpcConfig;
         private readonly TimeSpan _cancellationTokenTimeout;
 

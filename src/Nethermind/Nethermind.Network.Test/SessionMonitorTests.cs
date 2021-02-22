@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -81,7 +81,7 @@ namespace Nethermind.Network.Test
 
         private ISession CreateSession()
         {
-            ISession session = new Session(30312,  LimboLogs.Instance, Substitute.For<IChannel>());
+            ISession session = new Session(30312, Substitute.For<IChannel>(), NullDisconnectsAnalyzer.Instance, LimboLogs.Instance);
             session.PingSender = _pingSender;
             session.Handshake(TestItem.PublicKeyB);
             session.Init(5, Substitute.For<IChannelHandlerContext>(), Substitute.For<IPacketSender>());
@@ -90,7 +90,7 @@ namespace Nethermind.Network.Test
         
         private ISession CreateUnresponsiveSession()
         {
-            ISession session = new Session(30312, LimboLogs.Instance, Substitute.For<IChannel>());
+            ISession session = new Session(30312, Substitute.For<IChannel>(), NullDisconnectsAnalyzer.Instance, LimboLogs.Instance);
             session.PingSender = _noPong;
             session.Handshake(TestItem.PublicKeyB);
             session.Init(5, Substitute.For<IChannelHandlerContext>(), Substitute.For<IPacketSender>());

@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -94,10 +94,10 @@ namespace Nethermind.Synchronization.Blocks
         {
             if (blocksRequest == null)
             {
-                if(Logger.IsWarn) Logger.Warn($"NULL received for dispatch in {nameof(BlockDownloader)}");
+                if (Logger.IsWarn) Logger.Warn($"NULL received for dispatch in {nameof(BlockDownloader)}");
                 return;
             }
-            
+
             if (!_blockTree.CanAcceptNewBlocks) return;
             CancellationTokenSource linkedCancellation =
                 CancellationTokenSource.CreateLinkedTokenSource(
@@ -153,7 +153,7 @@ namespace Nethermind.Synchronization.Blocks
                 }
 
                 if (_logger.IsDebug) _logger.Debug($"Headers request {currentNumber}+{headersToRequest} to peer {bestPeer} with {bestPeer.HeadNumber} blocks. Got {currentNumber} and asking for {headersToRequest} more.");
-                BlockHeader[] headers = await RequestHeaders(bestPeer, cancellation, currentNumber, headersToRequest);
+                BlockHeader?[] headers = await RequestHeaders(bestPeer, cancellation, currentNumber, headersToRequest);
 
                 BlockHeader? startingPoint = headers[0] == null ? null : _blockTree.FindHeader(headers[0].Hash, BlockTreeLookupOptions.TotalDifficultyNotNeeded);
                 if (startingPoint == null)
@@ -185,7 +185,7 @@ namespace Nethermind.Synchronization.Blocks
                         break;
                     }
 
-                    BlockHeader currentHeader = headers[i];
+                    BlockHeader? currentHeader = headers[i];
                     if (currentHeader == null)
                     {
                         if (headersSynced - headersSyncedInPreviousRequests > 0)
@@ -267,7 +267,7 @@ namespace Nethermind.Synchronization.Blocks
 
                 if (cancellation.IsCancellationRequested) return blocksSynced; // check before every heavy operation
                 BlockHeader[] headers = await RequestHeaders(bestPeer, cancellation, currentNumber, headersToRequest);
-                BlockDownloadContext context = new BlockDownloadContext(_specProvider, bestPeer, headers, downloadReceipts, receiptsRecovery);
+                BlockDownloadContext context = new(_specProvider, bestPeer, headers, downloadReceipts, receiptsRecovery);
 
                 if (cancellation.IsCancellationRequested) return blocksSynced; // check before every heavy operation
                 await RequestBodies(bestPeer, cancellation, context);
@@ -439,7 +439,7 @@ namespace Nethermind.Synchronization.Blocks
                 await request.ContinueWith(t => DownloadFailHandler(request, "receipts"));
 
                 TxReceipt[][] result = request.Result;
-
+                
                 for (int i = 0; i < result.Length; i++)
                 {
                     TxReceipt[] txReceipts = result[i];
@@ -594,7 +594,10 @@ namespace Nethermind.Synchronization.Blocks
                     else
                     {
                         if (_logger.IsDebug) _logger.Error($"DEBUG/ERROR Block download from {peerInfo} failed. {t.Exception}");
-                        reason = "sync fault";
+                        reason = $"sync fault";
+#if DEBUG
+                        reason = $"sync fault| {t.Exception}";
+#endif
                     }
 
                     if (peerInfo != null) // fix this for node data sync
@@ -641,7 +644,7 @@ namespace Nethermind.Synchronization.Blocks
             SyncPeerAllocation allocation = await base.Allocate(request);
             CancellationTokenSource cancellation = new CancellationTokenSource();
             _allocationWithCancellation = new AllocationWithCancellation(allocation, cancellation);
-            
+
             allocation.Cancelled += AllocationOnCancelled;
             allocation.Replaced += AllocationOnReplaced;
             return allocation;
@@ -661,10 +664,10 @@ namespace Nethermind.Synchronization.Blocks
             {
                 return;
             }
-            
+
             allocationWithCancellation.Cancel();
         }
-        
+
         private void AllocationOnReplaced(object? sender, AllocationChangeEventArgs e)
         {
             if (e.Previous == null)
@@ -698,7 +701,7 @@ namespace Nethermind.Synchronization.Blocks
                 Cancellation = cancellation;
                 _isDisposed = false;
             }
-            
+
             public CancellationTokenSource Cancellation { get; }
             public SyncPeerAllocation Allocation { get; }
 
@@ -711,7 +714,7 @@ namespace Nethermind.Synchronization.Blocks
             }
 
             private bool _isDisposed;
-            
+
             public void Dispose()
             {
                 if (!_isDisposed)

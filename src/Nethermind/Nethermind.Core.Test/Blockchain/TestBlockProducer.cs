@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -20,11 +20,12 @@ using System.Threading.Tasks;
 using Nethermind.Blockchain;
 using Nethermind.Blockchain.Processing;
 using Nethermind.Blockchain.Producers;
+using Nethermind.Blockchain.Synchronization;
 using Nethermind.Consensus;
 using Nethermind.Consensus.Transactions;
-using Nethermind.Core.Extensions;
 using Nethermind.Int256;
 using Nethermind.Logging;
+using Nethermind.Specs;
 using Nethermind.State;
 
 namespace Nethermind.Core.Test.Blockchain
@@ -48,7 +49,8 @@ namespace Nethermind.Core.Test.Blockchain
                 blockProcessingQueue,
                 stateProvider,
                 timestamper,
-                FollowOtherMiners.Instance, 
+                FollowOtherMiners.Instance,
+                MainnetSpecProvider.Instance,
                 logManager,
                 "test producer")
         {
@@ -59,7 +61,8 @@ namespace Nethermind.Core.Test.Blockchain
 
         private SemaphoreSlim _newBlockArrived = new SemaphoreSlim(0);
         private BlockHeader _blockParent = null;
-        public BlockHeader BlockParent { 
+        public BlockHeader BlockParent
+        {
             get
             {
                 return _blockParent ?? base.GetCurrentBlockParent();
@@ -82,14 +85,14 @@ namespace Nethermind.Core.Test.Blockchain
 
         protected override async ValueTask ProducerLoop()
         {
+            _lastProducedBlock = DateTime.UtcNow;
             while (true)
             {
                 await _newBlockArrived.WaitAsync(LoopCancellationTokenSource.Token);
-                // Console.WriteLine("Trying to produce a new block.");
                 bool result = await TryProduceNewBlock(LoopCancellationTokenSource.Token);
                 // Console.WriteLine($"Produce new block result -> {result}");
             }
-            
+
             // ReSharper disable once FunctionNeverReturns
         }
 

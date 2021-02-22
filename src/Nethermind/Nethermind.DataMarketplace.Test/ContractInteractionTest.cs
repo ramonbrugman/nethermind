@@ -48,6 +48,10 @@ using NSubstitute;
 using NUnit.Framework;
 using System.Threading;
 using System.Threading.Tasks;
+using Nethermind.Blockchain.Spec;
+using Nethermind.Blockchain.Validators;
+using Nethermind.Core.Test.Specs;
+using Nethermind.Trie.Pruning;
 
 namespace Nethermind.DataMarketplace.Test
 {
@@ -111,13 +115,14 @@ namespace Nethermind.DataMarketplace.Test
 
             IReleaseSpec spec = _releaseSpec;
             ISpecProvider specProvider = new SingleReleaseSpecProvider(spec, 99);
-            StateDb stateDb = new StateDb();
-            _state = new StateProvider(stateDb, new StateDb(), _logManager);
-            StorageProvider storageProvider = new StorageProvider(stateDb, _state, _logManager);
+            MemDb stateDb = new MemDb();
+            TrieStore trieStore = new TrieStore(stateDb, _logManager);
+            _state = new StateProvider(trieStore, new MemDb(), _logManager);
+            StorageProvider storageProvider = new StorageProvider(trieStore, _state, _logManager);
             _state.CreateAccount(_consumerAccount, 1000.Ether());
             _state.CreateAccount(_providerAccount, 1.Ether());
             _state.Commit(spec);
-            _state.CommitTree();
+            _state.CommitTree(0);
 
             VirtualMachine machine = new VirtualMachine(_state, storageProvider, Substitute.For<IBlockhashProvider>(),
                 specProvider, _logManager);
@@ -127,8 +132,8 @@ namespace Nethermind.DataMarketplace.Test
             TxReceipt receipt = await DeployContract(Bytes.FromHexString(ContractData.GetInitCode(_feeAccount)));
             ((NdmConfig) _ndmConfig).ContractAddress = receipt.ContractAddress.ToString();
             _contractAddress = receipt.ContractAddress;
-            _txPool = new TxPool.TxPool(new InMemoryTxStorage(),
-                new EthereumEcdsa(specProvider.ChainId, _logManager), specProvider, new TxPoolConfig(), _state, _logManager);
+            _txPool = new TxPool.TxPool(new InMemoryTxStorage(), new EthereumEcdsa(specProvider.ChainId, _logManager), 
+                new FixedBlockChainHeadSpecProvider(specProvider), new TxPoolConfig(), _state, new TxValidator(specProvider.ChainId), _logManager);
             _ndmBridge = new NdmBlockchainBridge(_bridge, _bridge, _bridge, _bridge);
         }
 
@@ -137,7 +142,7 @@ namespace Nethermind.DataMarketplace.Test
             Transaction deployContract = new Transaction();
             deployContract.SenderAddress = _providerAccount;
             deployContract.GasLimit = 4000000;
-            deployContract.Init = initCode;
+            deployContract.Data = initCode;
             deployContract.Nonce = _bridge.GetNonce(_providerAccount);
             Keccak txHash = await _bridge.SendTransaction(deployContract, TxHandlingOptions.None);
             _bridge.IncrementNonce(_providerAccount);
@@ -172,7 +177,7 @@ namespace Nethermind.DataMarketplace.Test
                 _receiptsTracer = new BlockReceiptsTracer();
                 _processor = processor;
                 _tx = Build.A.Transaction.SignedAndResolved(new EthereumEcdsa(ChainId.Mainnet, LimboLogs.Instance), TestItem.PrivateKeyA).TestObject;
-                _headBlock = Build.A.Block.WithNumber(1).WithTransactions(Enumerable.Repeat(_tx, 100).ToArray()).TestObject;
+                _headBlock = Build.A.Block.WithNumber(1).WithTransactions(MuirGlacier.Instance, Enumerable.Repeat(_tx, 100).ToArray()).TestObject;
 
                 _receiptsTracer.SetOtherTracer(GethTracer);
                 _receiptsTracer.StartNewBlockTrace(_headBlock);
@@ -227,7 +232,7 @@ namespace Nethermind.DataMarketplace.Test
             
             private BlockReceiptsTracer _receiptsTracer;
 
-            private int _txIndex = 0;
+            private int _txIndex;
 
             public ValueTask<Keccak> SendTransaction(Transaction tx, TxHandlingOptions txHandlingOptions)
             {
@@ -254,7 +259,7 @@ namespace Nethermind.DataMarketplace.Test
                 throw new NotImplementedException();
             }
 
-            public long GetChainId()
+            public ulong GetChainId()
             {
                 return 1;
             }

@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ namespace Nethermind.Network.Rlpx.Handshake
             }
 
             AckMessage authMessage = new AckMessage();
-            authMessage.EphemeralPublicKey = new PublicKey(bytes.Slice(EphemeralPublicKeyOffset, EphemeralPublicKeyLength));
+            authMessage.EphemeralPublicKey = new PublicKey(bytes.AsSpan().Slice(EphemeralPublicKeyOffset, EphemeralPublicKeyLength));
             authMessage.Nonce = bytes.Slice(NonceOffset, NonceLength);
             authMessage.IsTokenUsed = bytes[IsTokenUsedOffset] == 0x01;
             return authMessage;

@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -39,6 +39,11 @@ namespace Nethermind.Blockchain.Processing
             List<Block> suggestedBlocks,
             ProcessingOptions processingOptions,
             IBlockTracer blockTracer);
+
+        /// <summary>
+        /// Fired when a branch is being processed.
+        /// </summary>
+        event EventHandler<BlocksProcessingEventArgs> BlocksProcessing;
         
         /// <summary>
         /// Fired after a block has been processed.

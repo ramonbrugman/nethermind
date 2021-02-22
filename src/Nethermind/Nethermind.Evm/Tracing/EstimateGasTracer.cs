@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -16,10 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Nethermind.Core;
 using Nethermind.Core.Crypto;
-using Nethermind.Core.Extensions;
 using Nethermind.Int256;
 using Nethermind.State;
 
@@ -41,6 +39,7 @@ namespace Nethermind.Evm.Tracing
         public bool IsTracingCode => false;
         public bool IsTracingStack => false;
         public bool IsTracingState => false;
+        public bool IsTracingStorage => false;
         public bool IsTracingBlockHash => false;
 
         public byte[] ReturnValue { get; set; }
@@ -117,7 +116,7 @@ namespace Nethermind.Evm.Tracing
             throw new NotSupportedException();
         }
 
-        public void SetOperationStorage(Address address, UInt256 storageIndex, byte[] newValue, byte[] currentValue)
+        public void SetOperationStorage(Address address, UInt256 storageIndex, ReadOnlySpan<byte> newValue, ReadOnlySpan<byte> currentValue)
         {
             throw new NotSupportedException();
         }
@@ -147,6 +146,11 @@ namespace Nethermind.Evm.Tracing
         }
 
         public void ReportStorageChange(StorageCell storageCell, byte[] before, byte[] after)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void ReportStorageRead(StorageCell storageCell)
         {
             throw new NotSupportedException();
         }

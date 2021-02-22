@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@ namespace Nethermind.Serialization.Rlp
 {
     public static class RlpDecoderExtensions
     {
-        public static T[] DecodeArray<T>(this IRlpDecoder<T> decoder, RlpStream rlpStream, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+        public static T[] DecodeArray<T>(this IRlpStreamDecoder<T> decoder, RlpStream rlpStream, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
         {
             int checkPosition = rlpStream.ReadSequenceLength() + rlpStream.Position;
             T[] result = new T[rlpStream.ReadNumberOfItemsRemaining(checkPosition)];
@@ -42,7 +42,7 @@ namespace Nethermind.Serialization.Rlp
             return result;
         }
         
-        public static Rlp Encode<T>(this IRlpDecoder<T> decoder, T[] items, RlpBehaviors behaviors = RlpBehaviors.None)
+        public static Rlp Encode<T>(this IRlpObjectDecoder<T> decoder, T?[]? items, RlpBehaviors behaviors = RlpBehaviors.None)
         {
             if (items == null)
             {

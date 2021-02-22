@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Nethermind.Config;
+using Nethermind.Core;
 using Nethermind.Core.Crypto;
 using Nethermind.Core.Extensions;
 using Nethermind.Db;
@@ -33,7 +34,7 @@ namespace Nethermind.Network
         private long _updateCounter;
         private long _removeCounter;
 
-        public NetworkStorage(IFullDb fullDb, ILogManager logManager)
+        public NetworkStorage(IFullDb? fullDb, ILogManager? logManager)
         {
             _fullDb = fullDb ?? throw new ArgumentNullException(nameof(fullDb));
             _logger = logManager?.GetClassLogger() ?? throw new ArgumentNullException(nameof(logManager));
@@ -49,9 +50,14 @@ namespace Nethermind.Network
 
         public NetworkNode[] GetPersistedNodes()
         {
-            List<NetworkNode> nodes = new List<NetworkNode>();
-            foreach (byte[] nodeRlp in _fullDb.Values)
+            List<NetworkNode> nodes = new();
+            foreach (byte[]? nodeRlp in _fullDb.Values)
             {
+                if (nodeRlp == null)
+                {
+                    continue;
+                }
+                
                 try
                 {
                     nodes.Add(GetNode(nodeRlp));
@@ -67,7 +73,7 @@ namespace Nethermind.Network
 
         public void UpdateNode(NetworkNode node)
         {
-            _fullDb[node.NodeId.Bytes] = Rlp.Encode(node).Bytes;
+            (_currentBatch ?? (IKeyValueStore)_fullDb)[node.NodeId.Bytes] = Rlp.Encode(node).Bytes;
             _updateCounter++;
         }
 
@@ -81,13 +87,15 @@ namespace Nethermind.Network
 
         public void RemoveNode(PublicKey nodeId)
         {
-            _fullDb.Remove(nodeId.Bytes);
+            (_currentBatch ?? (IKeyValueStore)_fullDb)[nodeId.Bytes] = null;
             _removeCounter++;
         }
 
+        private IBatch? _currentBatch;
+        
         public void StartBatch()
         {
-            _fullDb.StartBatch();
+            _currentBatch = _fullDb.StartBatch();
             _updateCounter = 0;
             _removeCounter = 0;
         }
@@ -95,7 +103,7 @@ namespace Nethermind.Network
         public void Commit()
         {
             if (_logger.IsTrace) _logger.Trace($"[{_fullDb.Name}] Committing nodes, updates: {_updateCounter}, removes: {_removeCounter}");
-            _fullDb.CommitBatch();
+            _currentBatch?.Dispose();
             if (_logger.IsTrace)
             {
                 LogDbContent(_fullDb.Values);
@@ -107,7 +115,7 @@ namespace Nethermind.Network
             return _updateCounter > 0 || _removeCounter > 0;
         }
 
-        private NetworkNode GetNode(byte[] networkNodeRaw)
+        private static NetworkNode GetNode(byte[] networkNodeRaw)
         {
             NetworkNode persistedNode = Rlp.Decode<NetworkNode>(networkNodeRaw);
             return persistedNode;
@@ -115,7 +123,7 @@ namespace Nethermind.Network
 
         private void LogDbContent(IEnumerable<byte[]> values)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             sb.AppendLine($"[{_fullDb.Name}]");
             foreach (byte[] value in values)
             {

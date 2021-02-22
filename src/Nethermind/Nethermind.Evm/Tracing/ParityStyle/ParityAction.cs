@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -17,29 +17,28 @@
 using System.Collections.Generic;
 using Nethermind.Core;
 using Nethermind.Int256;
-using Newtonsoft.Json;
 
 namespace Nethermind.Evm.Tracing.ParityStyle
 {
     public class ParityTraceAction
     {
-        public int[] TraceAddress { get; set; }
-        public string CallType { get; set; }
+        public int[]? TraceAddress { get; set; }
+        public string? CallType { get; set; }
         
         public bool IncludeInTrace { get; set; } = true;
         public bool IsPrecompiled { get; set; }
-        public string Type { get; set; }
-        public string CreationMethod { get; set; }
-        public Address From { get; set; }
-        public Address To { get; set; }
+        public string? Type { get; set; }
+        public string? CreationMethod { get; set; }
+        public Address? From { get; set; }
+        public Address? To { get; set; }
         public long Gas { get; set; }
         public UInt256 Value { get; set; }
-        public byte[] Input { get; set; }
-        public ParityTraceResult Result { get; set; } = new ParityTraceResult();
-        public List<ParityTraceAction> Subtraces { get; set; } = new List<ParityTraceAction>();
+        public byte[]? Input { get; set; }
+        public ParityTraceResult? Result { get; set; } = new();
+        public List<ParityTraceAction> Subtraces { get; set; } = new();
         
-        public Address Author { get; set; }
-        public string RewardType { get; set; }
-        public string Error { get; set; }
+        public Address? Author { get; set; }
+        public string? RewardType { get; set; }
+        public string? Error { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ namespace Nethermind.Evm.Tracing
 {
     public class BlockReceiptsTracer : IBlockTracer,  ITxTracer
     {
-        private Block _block;
+        private Block? _block;
         public bool IsTracingReceipt => true;
         public bool IsTracingActions => _currentTxTracer.IsTracingActions;
         public bool IsTracingOpLevelStorage => _currentTxTracer.IsTracingOpLevelStorage;
@@ -35,6 +35,7 @@ namespace Nethermind.Evm.Tracing
         public bool IsTracingCode => _currentTxTracer.IsTracingCode;
         public bool IsTracingStack => _currentTxTracer.IsTracingStack;
         public bool IsTracingState => _currentTxTracer.IsTracingState;
+        public bool IsTracingStorage => _currentTxTracer.IsTracingStorage;
         
         public bool IsTracingBlockHash => _currentTxTracer.IsTracingBlockHash;
 
@@ -82,7 +83,7 @@ namespace Nethermind.Evm.Tracing
         private TxReceipt BuildReceipt(Address recipient, long spentGas, byte statusCode, LogEntry[] logEntries, Keccak stateRoot = null)
         {
             Transaction transaction = _block.Transactions[_currentIndex];
-            TxReceipt txReceipt = new TxReceipt();
+            TxReceipt txReceipt = new();
             txReceipt.Logs = logEntries;
             if (logEntries.Length > 0)
             {
@@ -91,7 +92,8 @@ namespace Nethermind.Evm.Tracing
                     _block.Header.Bloom = new Bloom();
                 }
             }
-            
+
+            txReceipt.TxType = transaction.Type; 
             txReceipt.Bloom = logEntries.Length == 0 ? Bloom.Empty : new Bloom(logEntries, _block.Bloom);
             txReceipt.GasUsedTotal = _block.GasUsed;
             txReceipt.StatusCode = statusCode;
@@ -138,7 +140,7 @@ namespace Nethermind.Evm.Tracing
             _currentTxTracer.ReportStorageChange(key, value);
         }
 
-        public void SetOperationStorage(Address address, UInt256 storageIndex, byte[] newValue, byte[] currentValue)
+        public void SetOperationStorage(Address address, UInt256 storageIndex, ReadOnlySpan<byte> newValue, ReadOnlySpan<byte> currentValue)
         {
             _currentTxTracer.SetOperationStorage(address, storageIndex, newValue, currentValue);
         }
@@ -238,9 +240,9 @@ namespace Nethermind.Evm.Tracing
             _currentTxTracer.SetOperationMemory(memoryTrace);
         }
 
-        private ITxTracer _currentTxTracer;
+        private ITxTracer? _currentTxTracer;
         private int _currentIndex;
-        public TxReceipt[] TxReceipts { get; private set; }
+        public TxReceipt[]? TxReceipts { get; private set; }
 
         public bool IsTracingRewards => _otherTracer.IsTracingRewards;
 

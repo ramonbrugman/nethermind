@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -39,7 +39,7 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
                 return 0;
             }
 
-            return 100UL + (ulong) (tx.Data?.Length ?? 0) + (ulong) (tx.Init?.Length ?? 0);
+            return 100UL + (ulong) (tx.Data?.Length ?? 0);
         }
 
         public static ulong EstimateSize(Block block)

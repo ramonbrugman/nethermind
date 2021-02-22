@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@ namespace Nethermind.Synchronization.FastSync
             RequestedNodes = requestedNodes;
         }
         
-        public StateSyncItem[] RequestedNodes { get; }
+        public StateSyncItem[]? RequestedNodes { get; }
         
         public byte[][]? Responses { get; set; }
 
@@ -34,7 +34,7 @@ namespace Nethermind.Synchronization.FastSync
 
         public override string ToString()
         {
-            return $"{RequestedNodes.Length} state sync requests with {Responses?.Length ?? 0} responses";
+            return $"{RequestedNodes?.Length ?? 0} state sync requests with {Responses?.Length ?? 0} responses";
         }
     }
 }

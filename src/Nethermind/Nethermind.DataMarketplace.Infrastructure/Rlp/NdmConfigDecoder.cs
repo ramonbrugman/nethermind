@@ -21,7 +21,7 @@ using Nethermind.Serialization.Rlp;
 
 namespace Nethermind.DataMarketplace.Infrastructure.Rlp
 {
-    public class NdmConfigDecoder : IRlpDecoder<NdmConfig>
+    public class NdmConfigDecoder : IRlpNdmDecoder<NdmConfig>
     {
         public static void Init()
         {
@@ -67,6 +67,8 @@ namespace Nethermind.DataMarketplace.Infrastructure.Rlp
                 UInt256 gasPrice = rlpStream.DecodeUInt256();
                 uint cancelTransactionGasPricePercentageMultiplier = rlpStream.DecodeUInt();
                 bool jsonRpcDataChannelEnabled = rlpStream.DecodeBool();
+                UInt256 refundGasPrice = rlpStream.DecodeUInt256();
+                UInt256 paymentClaimGasPrice = rlpStream.DecodeUInt256();
 
                 return new NdmConfig
                 {
@@ -99,13 +101,20 @@ namespace Nethermind.DataMarketplace.Infrastructure.Rlp
                     GasPriceType = gasPriceType,
                     GasPrice = gasPrice,
                     CancelTransactionGasPricePercentageMultiplier = cancelTransactionGasPricePercentageMultiplier,
-                    JsonRpcDataChannelEnabled = jsonRpcDataChannelEnabled
+                    JsonRpcDataChannelEnabled = jsonRpcDataChannelEnabled,
+                    RefundGasPrice = refundGasPrice,
+                    PaymentClaimGasPrice = paymentClaimGasPrice
                 };
             }
             catch (Exception e)
             {
                 throw new RlpException($"{nameof(NdmConfig)} cannot be deserialized from", e);
             }
+        }
+
+        public void Encode(RlpStream stream, NdmConfig item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+        {
+            throw new NotImplementedException();
         }
 
         public Serialization.Rlp.Rlp Encode(NdmConfig item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
@@ -145,7 +154,9 @@ namespace Nethermind.DataMarketplace.Infrastructure.Rlp
                 Serialization.Rlp.Rlp.Encode(item.GasPriceType),
                 Serialization.Rlp.Rlp.Encode(item.GasPrice),
                 Serialization.Rlp.Rlp.Encode(item.CancelTransactionGasPricePercentageMultiplier),
-                Serialization.Rlp.Rlp.Encode(item.JsonRpcDataChannelEnabled));
+                Serialization.Rlp.Rlp.Encode(item.JsonRpcDataChannelEnabled),
+                Serialization.Rlp.Rlp.Encode(item.RefundGasPrice),
+                Serialization.Rlp.Rlp.Encode(item.PaymentClaimGasPrice));
         }
 
         public int GetLength(NdmConfig item, RlpBehaviors rlpBehaviors)

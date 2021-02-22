@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -16,8 +16,10 @@
 
 using System;
 using Nethermind.Core;
+using Nethermind.Core.Extensions;
 using Nethermind.Core.Specs;
 using Nethermind.Db;
+using Nethermind.Logging;
 using Nethermind.Serialization.Rlp;
 using Nethermind.Trie;
 
@@ -28,8 +30,8 @@ namespace Nethermind.State.Proofs
         private readonly bool _allowProofs;
         private static readonly ReceiptMessageDecoder Decoder = new ReceiptMessageDecoder();
         
-        public ReceiptTrie(IReleaseSpec releaseSpec, TxReceipt[] txReceipts, bool allowProofs = false)
-            : base(allowProofs ? (IDb) new MemDb() : NullDb.Instance, EmptyTreeHash, false, false)
+        public ReceiptTrie(IReleaseSpec releaseSpec, TxReceipt?[] txReceipts, bool allowProofs = false)
+            : base(allowProofs ? (IDb) new MemDb() : NullDb.Instance, EmptyTreeHash, false, false, NullLogManager.Instance)
         {
             _allowProofs = allowProofs;
             if (txReceipts.Length == 0)
@@ -42,10 +44,17 @@ namespace Nethermind.State.Proofs
             // a temporary trie would be a trie that exists to create a state root only and then be disposed of
             for (int i = 0; i < txReceipts.Length; i++)
             {
-                byte[] receiptRlp = Decoder.EncodeNew(txReceipts[i],
+                TxReceipt? currentReceipt = txReceipts[i];
+                byte[] receiptRlp = Decoder.EncodeNew(currentReceipt,
                     releaseSpec.IsEip658Enabled
                         ? RlpBehaviors.Eip658Receipts
                         : RlpBehaviors.None);
+                
+                if (currentReceipt is not null && currentReceipt.TxType != TxType.Legacy)
+                {
+                    receiptRlp = Bytes.Concat((byte)currentReceipt.TxType, receiptRlp);
+                }
+                
                 Set(Rlp.Encode(i).Bytes, receiptRlp);
             }
 

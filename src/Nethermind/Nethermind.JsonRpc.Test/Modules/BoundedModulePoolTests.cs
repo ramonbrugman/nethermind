@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -16,13 +16,8 @@
 
 using System;
 using System.Threading.Tasks;
-using Nethermind.Blockchain;
-using Nethermind.Blockchain.Processing;
-using Nethermind.Blockchain.Receipts;
 using Nethermind.Blockchain.Synchronization;
-using Nethermind.Core;
 using Nethermind.Core.Specs;
-using Nethermind.Crypto;
 using Nethermind.Db;
 using Nethermind.Specs;
 using Nethermind.JsonRpc.Modules;
@@ -30,6 +25,7 @@ using Nethermind.JsonRpc.Modules.Eth;
 using Nethermind.Logging;
 using Nethermind.State.Repositories;
 using Nethermind.Db.Blooms;
+using Nethermind.Trie.Pruning;
 using Nethermind.Facade;
 using Nethermind.State;
 using Nethermind.TxPool;
@@ -47,11 +43,11 @@ namespace Nethermind.JsonRpc.Test.Modules
         private BoundedModulePool<IEthModule> _modulePool;
 
         [SetUp]
-        public void Initialize()
+        public async Task Initialize()
         {
             ISpecProvider specProvider = MainnetSpecProvider.Instance;
             ITxPool txPool = NullTxPool.Instance;
-            MemDbProvider dbProvider = new MemDbProvider();
+            IDbProvider dbProvider = await TestMemDbProvider.InitAsync();
 
             BlockTree blockTree = new BlockTree(
                 dbProvider.BlocksDb,

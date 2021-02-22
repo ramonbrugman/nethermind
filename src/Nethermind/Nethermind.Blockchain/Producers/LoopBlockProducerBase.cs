@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -16,7 +16,6 @@
 
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Nethermind.Blockchain.Processing;
@@ -34,6 +33,7 @@ namespace Nethermind.Blockchain.Producers
         private const int ChainNotYetProcessedMillisecondsDelay = 100;
         private readonly string _name;
         private Task _producerTask;
+        private bool _isRunning = false;
         
         protected CancellationTokenSource LoopCancellationTokenSource { get; } = new CancellationTokenSource();
         protected int _canProduce = 0;
@@ -47,6 +47,7 @@ namespace Nethermind.Blockchain.Producers
             IStateProvider stateProvider,
             ITimestamper timestamper,
             IGasLimitCalculator gasLimitCalculator,
+            ISpecProvider specProvider,
             ILogManager logManager,
             string name) 
             : base(
@@ -58,6 +59,7 @@ namespace Nethermind.Blockchain.Producers
                 stateProvider,
                 gasLimitCalculator,
                 timestamper,
+                specProvider,
                 logManager)
         {
             _name = name;
@@ -67,6 +69,7 @@ namespace Nethermind.Blockchain.Producers
         {
             BlockProcessingQueue.ProcessingQueueEmpty += OnBlockProcessorQueueEmpty;
             BlockTree.NewBestSuggestedBlock += BlockTreeOnNewBestSuggestedBlock;
+            _isRunning = true;
             
             _producerTask = Task.Run(ProducerLoop, LoopCancellationTokenSource.Token).ContinueWith(t =>
             {
@@ -89,13 +92,17 @@ namespace Nethermind.Blockchain.Producers
         {
             BlockProcessingQueue.ProcessingQueueEmpty -= OnBlockProcessorQueueEmpty;
             BlockTree.NewBestSuggestedBlock -= BlockTreeOnNewBestSuggestedBlock;
+            _isRunning = false;
             
             LoopCancellationTokenSource?.Cancel();
             await (_producerTask ?? Task.CompletedTask);
         }
+
+        protected override bool IsRunning() => _producerTask != null && _isRunning;
         
         protected virtual async ValueTask ProducerLoop()
         {
+            _lastProducedBlock = DateTime.UtcNow;
             while (!LoopCancellationTokenSource.IsCancellationRequested)
             {
                 if (_canProduce == 1 && BlockProcessingQueue.IsEmpty)

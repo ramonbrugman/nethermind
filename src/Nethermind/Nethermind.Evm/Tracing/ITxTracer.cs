@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -54,19 +54,15 @@ namespace Nethermind.Evm.Tracing
         /// EVM stack tracing after each operation
         /// </summary>
         bool IsTracingStack { get; }
-        /// <summary>
-        /// State changes at commit stage
-        /// </summary>
-        bool IsTracingState { get; }
 
         /// <summary>
         /// Traces blockhash calls
         /// </summary>
         bool IsTracingBlockHash { get; }
 
-        void MarkAsSuccess(Address recipient, long gasSpent, byte[] output, LogEntry[] logs, Keccak stateRoot = null);
+        void MarkAsSuccess(Address recipient, long gasSpent, byte[] output, LogEntry[] logs, Keccak? stateRoot = null);
 
-        void MarkAsFailed(Address recipient, long gasSpent, byte[] output, string error, Keccak stateRoot = null);
+        void MarkAsFailed(Address recipient, long gasSpent, byte[] output, string error, Keccak? stateRoot = null);
 
         void StartOperation(int depth, long gas, Instruction opcode, int pc);
 
@@ -106,7 +102,7 @@ namespace Nethermind.Evm.Tracing
 
         void ReportStorageChange(in ReadOnlySpan<byte> key, in ReadOnlySpan<byte> value);
 
-        void SetOperationStorage(Address address, UInt256 storageIndex, byte[] newValue, byte[] currentValue);
+        void SetOperationStorage(Address address, UInt256 storageIndex, ReadOnlySpan<byte> newValue, ReadOnlySpan<byte> currentValue);
 
         void ReportSelfDestruct(Address address, UInt256 balance, Address refundAddress);
 

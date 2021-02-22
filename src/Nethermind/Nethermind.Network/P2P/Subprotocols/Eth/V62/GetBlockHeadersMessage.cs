@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
         public override string Protocol { get; } = "eth";
 
         public long StartBlockNumber { get; set; }
-        public Keccak StartBlockHash { get; set; }
+        public Keccak? StartBlockHash { get; set; }
         public long MaxHeaders { get; set; }
         public long Skip { get; set; }
         public byte Reverse { get; set; }

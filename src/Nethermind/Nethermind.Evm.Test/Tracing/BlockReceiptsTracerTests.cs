@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -15,10 +15,11 @@
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using FluentAssertions;
 using Nethermind.Core;
-using Nethermind.Core.Extensions;
 using Nethermind.Core.Test.Builders;
 using Nethermind.Evm.Tracing;
+using Nethermind.Specs.Forks;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -30,7 +31,7 @@ namespace Nethermind.Evm.Test.Tracing
         [Test]
         public void Sets_state_root_if_provided_on_success()
         {
-            Block block = Build.A.Block.WithTransactions(Build.A.Transaction.TestObject).TestObject;
+            Block block = Build.A.Block.WithTransactions(MuirGlacier.Instance, Build.A.Transaction.TestObject).TestObject;
             
             BlockReceiptsTracer tracer = new BlockReceiptsTracer();
             tracer.SetOtherTracer(NullBlockTracer.Instance);
@@ -42,9 +43,23 @@ namespace Nethermind.Evm.Test.Tracing
         }
         
         [Test]
+        public void Sets_tx_type()
+        {
+            Block block = Build.A.Block.WithTransactions(MuirGlacier.Instance, Build.A.Transaction.WithChainId(1).WithType(TxType.AccessList).TestObject).TestObject;
+            
+            BlockReceiptsTracer tracer = new();
+            tracer.SetOtherTracer(NullBlockTracer.Instance);
+            tracer.StartNewBlockTrace(block);
+            tracer.StartNewTxTrace(block.Transactions[0].Hash);
+            tracer.MarkAsSuccess(TestItem.AddressA, 100, new byte[0], new LogEntry[0]);
+
+            tracer.TxReceipts[0].TxType.Should().Be(TxType.AccessList);
+        }
+        
+        [Test]
         public void Sets_state_root_if_provided_on_failure()
         {
-            Block block = Build.A.Block.WithTransactions(Build.A.Transaction.TestObject).TestObject;
+            Block block = Build.A.Block.WithTransactions(MuirGlacier.Instance, Build.A.Transaction.TestObject).TestObject;
             
             BlockReceiptsTracer tracer = new BlockReceiptsTracer();
             tracer.SetOtherTracer(NullBlockTracer.Instance);
@@ -58,7 +73,7 @@ namespace Nethermind.Evm.Test.Tracing
         [Test]
         public void Invokes_other_tracer_mark_as_failed_if_other_block_tracer_is_tx_tracer_too()
         {
-            Block block = Build.A.Block.WithTransactions(Build.A.Transaction.TestObject).TestObject;
+            Block block = Build.A.Block.WithTransactions(MuirGlacier.Instance, Build.A.Transaction.TestObject).TestObject;
             
             IBlockTracer otherTracer = Substitute.For<IBlockTracer, ITxTracer>();
             BlockReceiptsTracer tracer = new BlockReceiptsTracer();
@@ -73,7 +88,7 @@ namespace Nethermind.Evm.Test.Tracing
         [Test]
         public void Invokes_other_tracer_mark_as_success_if_other_block_tracer_is_tx_tracer_too()
         {
-            Block block = Build.A.Block.WithTransactions(Build.A.Transaction.TestObject).TestObject;
+            Block block = Build.A.Block.WithTransactions(MuirGlacier.Instance, Build.A.Transaction.TestObject).TestObject;
             
             IBlockTracer otherTracer = Substitute.For<IBlockTracer, ITxTracer>();
             BlockReceiptsTracer tracer = new BlockReceiptsTracer();

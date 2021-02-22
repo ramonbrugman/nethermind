@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -16,7 +16,6 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Nethermind.Blockchain;
 using Nethermind.Blockchain.Filters;
 using Nethermind.Blockchain.Find;
 using Nethermind.Core;
@@ -31,7 +30,7 @@ namespace Nethermind.JsonRpc.Modules.Eth
     public interface IEthModule : IModule
     {
         [JsonRpcMethod(IsImplemented = true, Description = "Returns ChainID", IsSharable = true)]
-        ResultWrapper<long> eth_chainId();
+        ResultWrapper<ulong> eth_chainId();
         
         [JsonRpcMethod(IsImplemented = true, Description = "Returns ETH protocol version", IsSharable = true)]
         ResultWrapper<string> eth_protocolVersion();
@@ -106,7 +105,7 @@ namespace Nethermind.JsonRpc.Modules.Eth
         ResultWrapper<BlockForRpc> eth_getBlockByNumber(BlockParameter blockParameter, bool returnFullTransactionObjects = false);
         
         [JsonRpcMethod(IsImplemented = true, Description = "Retrieves a transaction by hash", IsSharable = true)]
-        ResultWrapper<TransactionForRpc> eth_getTransactionByHash(Keccak transactionHash);
+        Task<ResultWrapper<TransactionForRpc>> eth_getTransactionByHash(Keccak transactionHash);
         
         [JsonRpcMethod(IsImplemented = true, Description = "Returns the pending transactions list", IsSharable = true)]
         ResultWrapper<TransactionForRpc[]> eth_pendingTransactions();

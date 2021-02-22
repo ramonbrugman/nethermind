@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nethermind.Core;
 using Nethermind.Core.Extensions;
 using Nethermind.JsonRpc;
 using Nethermind.JsonRpc.Client;
@@ -44,10 +45,8 @@ namespace Nethermind.Db.Rpc
 
         public void Dispose()
         {
-            if (_recordDb is StateDb stateDb)
-            {
-                stateDb.Commit();
-            }
+            _logger.Info($"Disposing RPC DB {Name}");
+            _recordDb.Dispose();
         }
 
         public string Name { get; } = "RpcDb";
@@ -78,12 +77,7 @@ namespace Nethermind.Db.Rpc
 
         public IEnumerable<byte[]> GetAllValues(bool ordered = false) => _recordDb.GetAllValues();
 
-        public void StartBatch()
-        {
-            throw new InvalidOperationException("RPC DB does not support writes");
-        }
-
-        public void CommitBatch()
+        public IBatch StartBatch()
         {
             throw new InvalidOperationException("RPC DB does not support writes");
         }
@@ -96,7 +90,7 @@ namespace Nethermind.Db.Rpc
             byte[] value = null;
             if (response.Result != null)
             {
-                value = Bytes.FromHexString((string) response.Result);
+                value = Bytes.FromHexString((string)response.Result);
                 if (_recordDb != null)
                 {
                     _recordDb[key] = value;

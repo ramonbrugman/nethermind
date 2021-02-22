@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -74,7 +74,7 @@ namespace Nethermind.Runner.Ethereum.Steps
             }
             else
             {
-                StartupBlockTreeFixer fixer = new StartupBlockTreeFixer(syncConfig, _api.BlockTree, _logger);
+                StartupBlockTreeFixer fixer = new(syncConfig, _api.BlockTree, _logger);
                 await _api.BlockTree.Accept(fixer, cancellationToken).ContinueWith(t =>
                 {
                     if (t.IsFaulted)

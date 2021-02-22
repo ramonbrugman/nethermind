@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -25,14 +25,14 @@ namespace Nethermind.Specs
     {
         private readonly (long BlockNumber, IReleaseSpec Release)[] _transitions;
 
-        public int ChainId { get; }
+        public ulong ChainId { get; }
         public long[] TransitionBlocks { get; }
 
         public CustomSpecProvider(params (long BlockNumber, IReleaseSpec Release)[] transitions) : this(0, transitions)
         {
         }
 
-        public CustomSpecProvider(int chainId, params (long BlockNumber, IReleaseSpec Release)[] transitions)
+        public CustomSpecProvider(ulong chainId, params (long BlockNumber, IReleaseSpec Release)[] transitions)
         {
             ChainId = chainId;
             

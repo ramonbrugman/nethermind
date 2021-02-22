@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -42,5 +42,6 @@ namespace Nethermind.JsonRpc
         public int ReportIntervalSeconds { get; set; } = 300;
         public bool BufferResponses { get; set; }
         public string CallsFilterFilePath { get; set; } = "Data/jsonrpc.filter";
+        public long? MaxRequestBodySize { get; set; } = 30000000;
     }
 }

@@ -29,7 +29,6 @@ using Nethermind.Crypto;
 using Nethermind.Int256;
 using Nethermind.Logging;
 using Nethermind.Serialization.Rlp;
-using Nethermind.Specs;
 using Nethermind.Specs.Forks;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -200,14 +199,14 @@ namespace Ethereum.Transaction.Test
             if (validTest != null)
             {
                 Assert.AreEqual(validTest.Value, transaction.Value, "value");
-                Assert.AreEqual(validTest.Data, transaction.Data ?? transaction.Init, "data");
+                Assert.AreEqual(validTest.Data, transaction.Data, "data");
                 Assert.AreEqual(validTest.GasLimit, transaction.GasLimit, "gasLimit");
                 Assert.AreEqual(validTest.GasPrice, transaction.GasPrice, "gasPrice");
                 Assert.AreEqual(validTest.Nonce, transaction.Nonce, "nonce");
                 Assert.AreEqual(validTest.To, transaction.To, "to");
                 Assert.True(validator.IsWellFormed(transaction, spec));
 
-                Signature expectedSignature = new Signature(validTest.R, validTest.S, validTest.V);
+                Signature expectedSignature = new(validTest.R, validTest.S, validTest.V);
                 Assert.AreEqual(expectedSignature, transaction.Signature, "signature");
 
                 IEthereumEcdsa ecdsa = new EthereumEcdsa(useChainId ? ChainId.Mainnet : 0, LimboLogs.Instance);

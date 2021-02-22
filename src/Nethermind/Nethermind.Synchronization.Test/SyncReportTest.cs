@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -41,11 +41,12 @@ namespace Nethermind.Synchronization.Test
             pool.InitializedPeersCount.Returns(1);
             
             Queue<SyncMode> _syncModes = new Queue<SyncMode>();
-            _syncModes.Enqueue(SyncMode.None);
+            _syncModes.Enqueue(SyncMode.WaitingForBlock);
             _syncModes.Enqueue(SyncMode.FastSync);
             _syncModes.Enqueue(SyncMode.Full);
             _syncModes.Enqueue(SyncMode.FastBlocks);
             _syncModes.Enqueue(SyncMode.StateNodes);
+            _syncModes.Enqueue(SyncMode.Disconnected);
 
             SyncConfig syncConfig = new SyncConfig();
             syncConfig.FastBlocks = fastBlocks;

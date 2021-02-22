@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@ namespace Nethermind.Runner.Ethereum.Steps
 
         public Task Execute(CancellationToken _)
         {
-            MemoryHintMan memoryHintMan = new MemoryHintMan(_api.LogManager);
+            MemoryHintMan memoryHintMan = new(_api.LogManager);
             uint cpuCount = (uint) Environment.ProcessorCount;
             if (_initConfig.MemoryHint.HasValue)
             {

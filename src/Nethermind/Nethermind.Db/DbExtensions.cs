@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Nethermind.Core;
 using Nethermind.Core.Caching;
 using Nethermind.Core.Crypto;
 using Nethermind.Core.Extensions;
@@ -27,12 +26,17 @@ namespace Nethermind.Db
 {
     public static class DbExtensions
     {
+        public static ReadOnlyDb AsReadOnly(this IDb db, bool createInMemoryWriteStore)
+        {
+            return new ReadOnlyDb(db, createInMemoryWriteStore);
+        }
+        
         public static void Set(this IDb db, Keccak key, byte[] value)
          {
              db[key.Bytes] = value;
          }
         
-        public static byte[] Get(this IDb db, Keccak key)
+        public static byte[]? Get(this IDb db, Keccak key)
         {
             #if DEBUG
             if (key == Keccak.OfAnEmptyString)
@@ -86,12 +90,19 @@ namespace Nethermind.Db
             db.Remove(key.Bytes);
         }
         
+        public static void Set(this IDb db, byte[] key, byte[] value)
+        {
+            db[key] = value;
+        }
+        
         public static void Set(this IDb db, long key, byte[] value)
         {
             db[key.ToBigEndianByteArrayWithoutLeadingZeros()] = value;
         }
         
-        public static byte[] Get(this IDb db, long key) => db[key.ToBigEndianByteArrayWithoutLeadingZeros()];
+        public static byte[]? Get(this IDb db, long key) => db[key.ToBigEndianByteArrayWithoutLeadingZeros()];
+        
+        public static byte[]? Get(this IDb db, byte[] key) => db[key];
         
         /// <summary>
         /// 
@@ -107,10 +118,10 @@ namespace Nethermind.Db
             db.Remove(key.ToBigEndianByteArrayWithoutLeadingZeros());
         }
 
-        public static TItem Get<TItem>(this IDb db, Keccak key, IRlpDecoder<TItem> decoder, ICache<Keccak, TItem> cache = null, bool shouldCache = true) where TItem : class
+        public static TItem Get<TItem>(this IDb db, Keccak key, IRlpStreamDecoder<TItem> decoder, ICache<Keccak, TItem> cache = null, bool shouldCache = true) where TItem : class
         {
             TItem item = cache?.Get(key);
-            if (item == null)
+            if (item is null)
             {
                 if (db is IDbWithSpan spanDb && decoder is IRlpValueDecoder<TItem> valueDecoder)
                 {
@@ -132,8 +143,8 @@ namespace Nethermind.Db
                 }
                 else
                 {
-                    byte[] data = db.Get(key);
-                    if (data == null)
+                    byte[]? data = db.Get(key);
+                    if (data is null)
                     {
                         return null;
                     }
@@ -150,10 +161,10 @@ namespace Nethermind.Db
             return item;
         }
         
-        public static TItem Get<TItem>(this IDb db, long key, IRlpDecoder<TItem> decoder, ICache<long, TItem> cache = null, bool shouldCache = true) where TItem : class
+        public static TItem? Get<TItem>(this IDb db, long key, IRlpStreamDecoder<TItem>? decoder, ICache<long, TItem>? cache = null, bool shouldCache = true) where TItem : class
         {
-            TItem item = cache?.Get(key);
-            if (item == null)
+            TItem? item = cache?.Get(key);
+            if (item is null)
             {
                 if (db is IDbWithSpan spanDb && decoder is IRlpValueDecoder<TItem> valueDecoder)
                 {
@@ -175,8 +186,8 @@ namespace Nethermind.Db
                 }
                 else
                 {
-                    byte[] data = db.Get(key);
-                    if (data == null)
+                    byte[]? data = db.Get(key);
+                    if (data is null)
                     {
                         return null;
                     }

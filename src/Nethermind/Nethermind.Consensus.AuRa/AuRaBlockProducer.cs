@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Nethermind.Blockchain;
 using Nethermind.Blockchain.Processing;
 using Nethermind.Blockchain.Producers;
+using Nethermind.Blockchain.Synchronization;
 using Nethermind.Consensus.AuRa.Config;
 using Nethermind.Consensus.AuRa.Validators;
 using Nethermind.Consensus.Transactions;
@@ -49,6 +50,7 @@ namespace Nethermind.Consensus.AuRa
             IReportingValidator reportingValidator,
             IAuraConfig config,
             IGasLimitCalculator gasLimitCalculator,
+            ISpecProvider specProvider,
             ILogManager logManager) 
             : base(
                 new ValidatedTxSource(txSource, logManager),
@@ -59,6 +61,7 @@ namespace Nethermind.Consensus.AuRa
                 stateProvider,
                 timestamper,
                 gasLimitCalculator,
+                specProvider,
                 logManager,
                 "AuRa")
         {
@@ -157,7 +160,7 @@ namespace Nethermind.Consensus.AuRa
                 
                 foreach (var tx in _innerSource.GetTransactions(parent, gasLimit))
                 {
-                    var senderNonce = (tx.SenderAddress, tx.Nonce);
+                    var senderNonce = (SenderAddress: tx.SenderAddress, tx.Nonce);
                     if (_senderNonces.TryGetValue(senderNonce, out var prevTx))
                     {
                         if (_logger.IsError)

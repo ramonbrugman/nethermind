@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -20,9 +20,9 @@ namespace Nethermind.Serialization.Rlp
 {
     public class KeccakDecoder : IRlpValueDecoder<Keccak>
     {
-        public static readonly KeccakDecoder Instance = new KeccakDecoder();
+        public static readonly KeccakDecoder Instance = new();
         
-        public Keccak Decode(ref Rlp.ValueDecoderContext decoderContext, RlpBehaviors rlpBehaviors = RlpBehaviors.None) => decoderContext.DecodeKeccak();
+        public Keccak? Decode(ref Rlp.ValueDecoderContext decoderContext, RlpBehaviors rlpBehaviors = RlpBehaviors.None) => decoderContext.DecodeKeccak();
 
         public Rlp Encode(Keccak item, RlpBehaviors rlpBehaviors = RlpBehaviors.None) => Rlp.Encode(item);
 

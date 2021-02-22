@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -46,6 +46,7 @@ namespace Nethermind.Serialization.Json
                 new BloomConverter(),
                 new ByteArrayConverter(),
                 new LongConverter(),
+                new ULongConverter(),
                 new NullableLongConverter(),
                 new UInt256Converter(),
                 new NullableUInt256Converter(),
@@ -63,6 +64,7 @@ namespace Nethermind.Serialization.Json
             new BloomConverter(),
             new ByteArrayConverter(),
             new LongConverter(NumberConversion.Decimal),
+            new ULongConverter(NumberConversion.Decimal),
             new NullableLongConverter(NumberConversion.Decimal),
             new UInt256Converter(NumberConversion.Decimal),
             new NullableUInt256Converter(NumberConversion.Decimal),

@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@ namespace Nethermind.Cli.Modules
         public JsValue GetBlockReceipts(string blockParameter) => NodeManager.PostJint("parity_getBlockReceipts", blockParameter).Result;
         
         [CliProperty("parity", "enode", Description = "Returns the node enode URI.")]
-        public string Enode() => NodeManager.Post<string>("parity_enode").Result;
+        public string? Enode() => NodeManager.Post<string>("parity_enode").Result;
         
         [CliFunction("parity", "clearEngineSigner", Description = "Clears an authority account for signing consensus messages. Blocks will not be sealed.")]
         public bool ClearSigner() => NodeManager.Post<bool>("parity_clearEngineSigner").Result;
@@ -43,6 +43,8 @@ namespace Nethermind.Cli.Modules
         
         [CliFunction("parity", "setEngineSignerSecret", Description = "Sets an authority account for signing consensus messages.")]
         public bool SetEngineSignerSecret(string privateKey) => NodeManager.Post<bool>("parity_setEngineSignerSecret", privateKey).Result;
-
+        
+        [CliProperty("parity", "netPeers", Description = "Returns connected peers. Peers with non-empty protocols have completed handshake.")]
+        public JsValue NetPeers() => NodeManager.PostJint("parity_netPeers").Result;
     }
 }

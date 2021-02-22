@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -14,15 +14,22 @@
 //  You should have received a copy of the GNU Lesser General Public License
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 
+using System;
 using Nethermind.Core;
 using Nethermind.Core.Crypto;
 using Nethermind.Int256;
 
 namespace Nethermind.Serialization.Rlp
 {
-    public class HeaderDecoder : IRlpValueDecoder<BlockHeader>, IRlpDecoder<BlockHeader>
+    public class HeaderDecoder : IRlpValueDecoder<BlockHeader>, IRlpStreamDecoder<BlockHeader>
     {
-        public BlockHeader Decode(ref Rlp.ValueDecoderContext decoderContext, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+        // TODO: need to take a decision on whether to make the whole RLP spec specific?
+        // This would help with EIP1559 as well and could generally setup proper coders automatically, hmm
+        // but then RLP would have to be passed into so many places
+        public static long Eip1559TransitionBlock = long.MaxValue;
+
+        public BlockHeader? Decode(ref Rlp.ValueDecoderContext decoderContext,
+            RlpBehaviors rlpBehaviors = RlpBehaviors.None)
         {
             if (decoderContext.IsNextItemNull())
             {
@@ -33,27 +40,27 @@ namespace Nethermind.Serialization.Rlp
             int headerSequenceLength = decoderContext.ReadSequenceLength();
             int headerCheck = decoderContext.Position + headerSequenceLength;
 
-            Keccak parentHash = decoderContext.DecodeKeccak();
-            Keccak ommersHash = decoderContext.DecodeKeccak();
-            Address beneficiary = decoderContext.DecodeAddress();
-            Keccak stateRoot = decoderContext.DecodeKeccak();
-            Keccak transactionsRoot = decoderContext.DecodeKeccak();
-            Keccak receiptsRoot = decoderContext.DecodeKeccak();
-            Bloom bloom = decoderContext.DecodeBloom();
+            Keccak? parentHash = decoderContext.DecodeKeccak();
+            Keccak? ommersHash = decoderContext.DecodeKeccak();
+            Address? beneficiary = decoderContext.DecodeAddress();
+            Keccak? stateRoot = decoderContext.DecodeKeccak();
+            Keccak? transactionsRoot = decoderContext.DecodeKeccak();
+            Keccak? receiptsRoot = decoderContext.DecodeKeccak();
+            Bloom? bloom = decoderContext.DecodeBloom();
             UInt256 difficulty = decoderContext.DecodeUInt256();
             UInt256 number = decoderContext.DecodeUInt256();
             UInt256 gasLimit = decoderContext.DecodeUInt256();
             UInt256 gasUsed = decoderContext.DecodeUInt256();
             UInt256 timestamp = decoderContext.DecodeUInt256();
-            byte[] extraData = decoderContext.DecodeByteArray();
+            byte[]? extraData = decoderContext.DecodeByteArray();
 
-            BlockHeader blockHeader = new BlockHeader(
+            BlockHeader blockHeader = new(
                 parentHash,
                 ommersHash,
                 beneficiary,
                 difficulty,
-                (long) number,
-                (long) gasLimit,
+                (long)number,
+                (long)gasLimit,
                 timestamp,
                 extraData)
             {
@@ -61,21 +68,26 @@ namespace Nethermind.Serialization.Rlp
                 TxRoot = transactionsRoot,
                 ReceiptsRoot = receiptsRoot,
                 Bloom = bloom,
-                GasUsed = (long) gasUsed,
+                GasUsed = (long)gasUsed,
                 Hash = Keccak.Compute(headerRlp)
             };
-            
+
             if (decoderContext.PeekPrefixAndContentLength().ContentLength == Keccak.Size)
             {
                 blockHeader.MixHash = decoderContext.DecodeKeccak();
-                blockHeader.Nonce = (ulong) decoderContext.DecodeUBigInt();
+                blockHeader.Nonce = (ulong)decoderContext.DecodeUBigInt();
             }
             else
             {
-                blockHeader.AuRaStep = (long) decoderContext.DecodeUInt256();
+                blockHeader.AuRaStep = (long)decoderContext.DecodeUInt256();
                 blockHeader.AuRaSignature = decoderContext.DecodeByteArray();
             }
-            
+
+            if (blockHeader.Number >= Eip1559TransitionBlock)
+            {
+                blockHeader.BaseFee = decoderContext.DecodeUInt256();
+            }
+
             if ((rlpBehaviors & RlpBehaviors.AllowExtraData) != RlpBehaviors.AllowExtraData)
             {
                 decoderContext.Check(headerCheck);
@@ -84,7 +96,7 @@ namespace Nethermind.Serialization.Rlp
             return blockHeader;
         }
 
-        public BlockHeader Decode(RlpStream rlpStream, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+        public BlockHeader? Decode(RlpStream rlpStream, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
         {
             if (rlpStream.IsNextItemNull())
             {
@@ -92,31 +104,31 @@ namespace Nethermind.Serialization.Rlp
                 return null;
             }
 
-            var headerRlp = rlpStream.PeekNextItem();
+            Span<byte> headerRlp = rlpStream.PeekNextItem();
             int headerSequenceLength = rlpStream.ReadSequenceLength();
             int headerCheck = rlpStream.Position + headerSequenceLength;
 
-            Keccak parentHash = rlpStream.DecodeKeccak();
-            Keccak ommersHash = rlpStream.DecodeKeccak();
-            Address beneficiary = rlpStream.DecodeAddress();
-            Keccak stateRoot = rlpStream.DecodeKeccak();
-            Keccak transactionsRoot = rlpStream.DecodeKeccak();
-            Keccak receiptsRoot = rlpStream.DecodeKeccak();
-            Bloom bloom = rlpStream.DecodeBloom();
+            Keccak? parentHash = rlpStream.DecodeKeccak();
+            Keccak? ommersHash = rlpStream.DecodeKeccak();
+            Address? beneficiary = rlpStream.DecodeAddress();
+            Keccak? stateRoot = rlpStream.DecodeKeccak();
+            Keccak? transactionsRoot = rlpStream.DecodeKeccak();
+            Keccak? receiptsRoot = rlpStream.DecodeKeccak();
+            Bloom? bloom = rlpStream.DecodeBloom();
             UInt256 difficulty = rlpStream.DecodeUInt256();
             UInt256 number = rlpStream.DecodeUInt256();
             UInt256 gasLimit = rlpStream.DecodeUInt256();
             UInt256 gasUsed = rlpStream.DecodeUInt256();
             UInt256 timestamp = rlpStream.DecodeUInt256();
-            byte[] extraData = rlpStream.DecodeByteArray();
+            byte[]? extraData = rlpStream.DecodeByteArray();
 
-            BlockHeader blockHeader = new BlockHeader(
+            BlockHeader blockHeader = new(
                 parentHash,
                 ommersHash,
                 beneficiary,
                 difficulty,
-                (long) number,
-                (long) gasLimit,
+                (long)number,
+                (long)gasLimit,
                 timestamp,
                 extraData)
             {
@@ -124,19 +136,24 @@ namespace Nethermind.Serialization.Rlp
                 TxRoot = transactionsRoot,
                 ReceiptsRoot = receiptsRoot,
                 Bloom = bloom,
-                GasUsed = (long) gasUsed,
+                GasUsed = (long)gasUsed,
                 Hash = Keccak.Compute(headerRlp)
             };
-            
+
             if (rlpStream.PeekPrefixAndContentLength().ContentLength == Keccak.Size)
             {
                 blockHeader.MixHash = rlpStream.DecodeKeccak();
-                blockHeader.Nonce = (ulong) rlpStream.DecodeUBigInt();
+                blockHeader.Nonce = (ulong)rlpStream.DecodeUBigInt();
             }
             else
             {
-                blockHeader.AuRaStep = (long) rlpStream.DecodeUInt256();
+                blockHeader.AuRaStep = (long)rlpStream.DecodeUInt256();
                 blockHeader.AuRaSignature = rlpStream.DecodeByteArray();
+            }
+
+            if (blockHeader.Number >= Eip1559TransitionBlock)
+            {
+                blockHeader.BaseFee = rlpStream.DecodeUInt256();
             }
 
             if ((rlpBehaviors & RlpBehaviors.AllowExtraData) != RlpBehaviors.AllowExtraData)
@@ -147,63 +164,67 @@ namespace Nethermind.Serialization.Rlp
             return blockHeader;
         }
 
-        public void Encode(RlpStream rlpStream, BlockHeader item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+        public void Encode(RlpStream rlpStream, BlockHeader? header, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
         {
-            if (item == null)
+            if (header is null)
             {
                 rlpStream.EncodeNullObject();
                 return;
             }
-            
+
             bool notForSealing = (rlpBehaviors & RlpBehaviors.ForSealing) != RlpBehaviors.ForSealing;
-            rlpStream.StartSequence(GetContentLength(item, rlpBehaviors));
-            rlpStream.Encode(item.ParentHash);
-            rlpStream.Encode(item.OmmersHash);
-            rlpStream.Encode(item.Beneficiary);
-            rlpStream.Encode(item.StateRoot);
-            rlpStream.Encode(item.TxRoot);
-            rlpStream.Encode(item.ReceiptsRoot);
-            rlpStream.Encode(item.Bloom);
-            rlpStream.Encode(item.Difficulty);
-            rlpStream.Encode(item.Number);
-            rlpStream.Encode(item.GasLimit);
-            rlpStream.Encode(item.GasUsed);
-            rlpStream.Encode(item.Timestamp);
-            rlpStream.Encode(item.ExtraData);
+            rlpStream.StartSequence(GetContentLength(header, rlpBehaviors));
+            rlpStream.Encode(header.ParentHash);
+            rlpStream.Encode(header.OmmersHash);
+            rlpStream.Encode(header.Beneficiary);
+            rlpStream.Encode(header.StateRoot);
+            rlpStream.Encode(header.TxRoot);
+            rlpStream.Encode(header.ReceiptsRoot);
+            rlpStream.Encode(header.Bloom);
+            rlpStream.Encode(header.Difficulty);
+            rlpStream.Encode(header.Number);
+            rlpStream.Encode(header.GasLimit);
+            rlpStream.Encode(header.GasUsed);
+            rlpStream.Encode(header.Timestamp);
+            rlpStream.Encode(header.ExtraData);
 
             if (notForSealing)
             {
-                bool isAuRa = item.AuRaSignature != null;
-                
+                bool isAuRa = header.AuRaSignature != null;
                 if (isAuRa)
                 {
-                    rlpStream.Encode(item.AuRaStep.Value);
-                    rlpStream.Encode(item.AuRaSignature);
+                    rlpStream.Encode(header.AuRaStep!.Value);
+                    rlpStream.Encode(header.AuRaSignature);
                 }
                 else
                 {
-	                rlpStream.Encode(item.MixHash);
-    	            rlpStream.Encode(item.Nonce);
+                    rlpStream.Encode(header.MixHash);
+                    rlpStream.EncodeNonce(header.Nonce);
                 }
+            }
+
+            if (header.Number >= Eip1559TransitionBlock)
+            {
+                rlpStream.Encode(header.BaseFee);
             }
         }
 
-        public Rlp Encode(BlockHeader item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+        public Rlp Encode(BlockHeader? item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
         {
             if (item == null)
             {
                 return Rlp.OfEmptySequence;
             }
-            
-            RlpStream rlpStream = new RlpStream(GetLength(item, rlpBehaviors));
+
+            RlpStream rlpStream = new(GetLength(item, rlpBehaviors));
             Encode(rlpStream, item, rlpBehaviors);
-            
+
             return new Rlp(rlpStream.Data);
         }
 
-        private int GetContentLength(BlockHeader item, RlpBehaviors rlpBehaviors)
+        private static int GetContentLength(BlockHeader? item, RlpBehaviors rlpBehaviors)
         {
-            if (item == null)
+            if (item is null)
             {
                 return 0;
             }
@@ -222,28 +243,28 @@ namespace Nethermind.Serialization.Rlp
                                 + Rlp.LengthOf(item.GasLimit)
                                 + Rlp.LengthOf(item.GasUsed)
                                 + Rlp.LengthOf(item.Timestamp)
-                                + Rlp.LengthOf(item.ExtraData);
+                                + Rlp.LengthOf(item.ExtraData)
+                                + (item.Number < Eip1559TransitionBlock ? 0 : Rlp.LengthOf(item.BaseFee));
 
             if (notForSealing)
             {
-                var isAUra = item.AuRaSignature != null;
-                
-                if (isAUra)
+                bool isAuRa = item.AuRaSignature != null;
+                if (isAuRa)
                 {
-                    contentLength += Rlp.LengthOf(item.AuRaStep.Value);
+                    contentLength += Rlp.LengthOf(item.AuRaStep!.Value);
                     contentLength += Rlp.LengthOf(item.AuRaSignature);
                 }
                 else
                 {
                     contentLength += Rlp.LengthOf(item.MixHash);
-                    contentLength += Rlp.LengthOf(item.Nonce);
+                    contentLength += Rlp.LengthOfNonce(item.Nonce);
                 }
             }
 
             return contentLength;
         }
 
-        public int GetLength(BlockHeader item, RlpBehaviors rlpBehaviors)
+        public int GetLength(BlockHeader? item, RlpBehaviors rlpBehaviors)
         {
             return Rlp.LengthOfSequence(GetContentLength(item, rlpBehaviors));
         }

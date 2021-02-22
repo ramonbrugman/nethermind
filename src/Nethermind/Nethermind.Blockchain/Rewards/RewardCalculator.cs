@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -15,10 +15,7 @@
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Numerics;
 using Nethermind.Core;
-using Nethermind.Core.Attributes;
-using Nethermind.Core.Extensions;
 using Nethermind.Core.Specs;
 using Nethermind.Int256;
 using Nethermind.Evm;
@@ -68,9 +65,6 @@ namespace Nethermind.Blockchain.Rewards
             return blockReward - ((uint) (blockHeader.Number - ommer.Number) * blockReward >> 3);
         }
 
-        public IRewardCalculator Get(ITransactionProcessor processor)
-        {
-            return this;
-        }
+        public IRewardCalculator Get(ITransactionProcessor processor) => this;
     }
 }

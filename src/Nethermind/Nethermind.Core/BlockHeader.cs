@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@ using System.Text;
 using Nethermind.Core.Attributes;
 using Nethermind.Core.Crypto;
 using Nethermind.Core.Extensions;
+using Nethermind.Core.Specs;
 using Nethermind.Int256;
 
 namespace Nethermind.Core
@@ -64,23 +65,30 @@ namespace Nethermind.Core
         public UInt256 Difficulty { get; set; }
         public long Number { get; set; }
         public long GasUsed { get; set; }
-        public long GasLimit { get; set; }
+        public long GasLimit { get; set; } // TODO: does gas limit become the target or limit now?
+
+        public long GetActualGasLimit(IReleaseSpec spec)
+        {
+            return spec.IsEip1559Enabled ? GasLimit * 2 : GasLimit;
+        }
+
         public UInt256 Timestamp { get; set; }
         public DateTime TimestampDate => DateTimeOffset.FromUnixTimeSeconds((long) Timestamp).LocalDateTime;
-        public byte[]? ExtraData { get; set; }
+        public byte[] ExtraData { get; set; } = Array.Empty<byte>();
         public Keccak? MixHash { get; set; }
         public ulong Nonce { get; set; }
         public Keccak? Hash { get; set; }
         public UInt256? TotalDifficulty { get; set; }
         public byte[]? AuRaSignature { get; set; }
         public long? AuRaStep { get; set; }
-        
+        public UInt256 BaseFee { get; set; }
+
         public bool HasBody => OmmersHash != Keccak.OfAnEmptySequenceRlp || TxRoot != Keccak.EmptyTreeHash;
         public SealEngineType SealEngineType { get; set; } = SealEngineType.Ethash;
 
         public string ToString(string indent)
         {
-            StringBuilder builder = new StringBuilder();
+            StringBuilder builder = new();
             builder.AppendLine($"{indent}Hash: {Hash}");
             builder.AppendLine($"{indent}Number: {Number}");
             builder.AppendLine($"{indent}Parent: {ParentHash}");
@@ -88,7 +96,7 @@ namespace Nethermind.Core
             builder.AppendLine($"{indent}Gas Limit: {GasLimit}");
             builder.AppendLine($"{indent}Gas Used: {GasUsed}");
             builder.AppendLine($"{indent}Timestamp: {Timestamp}");
-            builder.AppendLine($"{indent}Extra Data: {(ExtraData ?? new byte[0]).ToHexString()}");
+            builder.AppendLine($"{indent}Extra Data: {ExtraData.ToHexString()}");
             builder.AppendLine($"{indent}Difficulty: {Difficulty}");
             builder.AppendLine($"{indent}Mix Hash: {MixHash}");
             builder.AppendLine($"{indent}Nonce: {Nonce}");
@@ -96,6 +104,7 @@ namespace Nethermind.Core
             builder.AppendLine($"{indent}Tx Root: {TxRoot}");
             builder.AppendLine($"{indent}Receipts Root: {ReceiptsRoot}");
             builder.AppendLine($"{indent}State Root: {StateRoot}");
+            builder.AppendLine($"{indent}Base Fee: {BaseFee}");
 
             return builder.ToString();
         }
@@ -124,6 +133,59 @@ namespace Nethermind.Core
             Full,
             Short,
             FullHashAndNumber
+        }
+        
+        private static readonly UInt256 BaseFeeMaxChangeDenominator = 8;
+        
+        public static UInt256 CalculateBaseFee(BlockHeader parent, IReleaseSpec spec)
+        {
+            UInt256 expectedBaseFee = UInt256.Zero;
+            if (spec.IsEip1559Enabled)
+            {
+                UInt256 parentBaseFee = parent.BaseFee;
+                long gasDelta;
+                UInt256 feeDelta;
+                long parentGasTarget = parent.GasLimit;
+
+                // # check if the base fee is correct
+                //   if parent_gas_used == parent_gas_target:
+                //   expected_base_fee = parent_base_fee
+                //   elif parent_gas_used > parent_gas_target:
+                //   gas_delta = parent_gas_used - parent_gas_target
+                //   fee_delta = max(parent_base_fee * gas_delta // parent_gas_target // BASE_FEE_MAX_CHANGE_DENOMINATOR, 1)
+                //   expected_base_fee = parent_base_fee + fee_delta
+                //   else:
+                //   gas_delta = parent_gas_target - parent_gas_used
+                //   fee_delta = parent_base_fee * gas_delta // parent_gas_target // BASE_FEE_MAX_CHANGE_DENOMINATOR
+                //   expected_base_fee = parent_base_fee - fee_delta
+                //   assert expected_base_fee == block.base_fee, 'invalid block: base fee not correct'
+
+                if (parent.GasUsed == parentGasTarget)
+                {
+                    expectedBaseFee = parent.BaseFee;
+                }
+                else if (parent.GasUsed > parentGasTarget)
+                {
+                    gasDelta = parent.GasUsed - parentGasTarget;
+                    feeDelta = UInt256.Max(
+                        parentBaseFee * (UInt256) gasDelta / (UInt256) parentGasTarget / BaseFeeMaxChangeDenominator,
+                        UInt256.One);
+                    expectedBaseFee = parentBaseFee + feeDelta;
+                }
+                else
+                {
+                    gasDelta = parentGasTarget - parent.GasUsed;
+                    feeDelta = parentBaseFee * (UInt256) gasDelta / (UInt256) parentGasTarget / BaseFeeMaxChangeDenominator;
+                    expectedBaseFee = parentBaseFee - feeDelta;
+                }
+
+                if (spec.Eip1559TransitionBlock == parent.Number + 1)
+                {
+                    expectedBaseFee = 1.GWei();
+                }
+            }
+
+            return expectedBaseFee;
         }
     }
 }

@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -17,11 +17,13 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
-using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Nethermind.Core;
 using Nethermind.Core.Extensions;
-using Nethermind.Int256;
 using Nethermind.Evm.Tracing;
+using Nethermind.Int256;
+using static System.Runtime.CompilerServices.Unsafe;
 
 namespace Nethermind.Evm
 {
@@ -47,7 +49,7 @@ namespace Nethermind.Evm
         private Span<byte> _bytes;
 
         private ITxTracer _tracer;
-        
+
         public void PushBytes(in Span<byte> value)
         {
             if (_tracer.IsTracingInstructions) _tracer.ReportStackPush(value);
@@ -107,8 +109,8 @@ namespace Nethermind.Evm
             }
         }
 
-        private static readonly byte[] OneStackItem = {1};
-        
+        private static readonly byte[] OneStackItem = { 1 };
+
         public void PushOne()
         {
             if (_tracer.IsTracingInstructions) _tracer.ReportStackPush(OneStackItem);
@@ -125,8 +127,8 @@ namespace Nethermind.Evm
             }
         }
 
-        private static readonly byte[] ZeroStackItem = {0};
-        
+        private static readonly byte[] ZeroStackItem = { 0 };
+
         public void PushZero()
         {
             if (_tracer.IsTracingInstructions)
@@ -160,10 +162,34 @@ namespace Nethermind.Evm
             }
         }
 
+        /// <summary>
+        /// Pushes an Uint256 written in big endian.
+        /// </summary>
+        /// <remarks>
+        /// This method is a counterpart to <see cref="PopUInt256"/> and uses the same, raw data approach to write data back.
+        /// </remarks>
         public void PushUInt256(in UInt256 value)
         {
             Span<byte> word = _bytes.Slice(Head * 32, 32);
-            value.ToBigEndian(word);
+            ref byte bytes = ref word[0];
+
+            ulong u3 = value.u3;
+            ulong u2 = value.u2;
+            ulong u1 = value.u1;
+            ulong u0 = value.u0;
+
+            if (BitConverter.IsLittleEndian)
+            {
+                u3 = BinaryPrimitives.ReverseEndianness(u3);
+                u2 = BinaryPrimitives.ReverseEndianness(u2);
+                u1 = BinaryPrimitives.ReverseEndianness(u1);
+                u0 = BinaryPrimitives.ReverseEndianness(u0);
+            }
+
+            WriteUnaligned(ref bytes, u3);
+            WriteUnaligned(ref Add(ref bytes, sizeof(ulong)), u2);
+            WriteUnaligned(ref Add(ref bytes, 2 * sizeof(ulong)), u1);
+            WriteUnaligned(ref Add(ref bytes, 3 * sizeof(ulong)), u0);
 
             if (_tracer.IsTracingInstructions) _tracer.ReportStackPush(word);
 
@@ -176,7 +202,7 @@ namespace Nethermind.Evm
 
         public void PushSignedInt256(in Int256.Int256 value)
         {
-            PushUInt256((UInt256) value);
+            PushUInt256((UInt256)value);
         }
 
         public void PopLimbo()
@@ -190,12 +216,42 @@ namespace Nethermind.Evm
 
         public void PopSignedInt256(out Int256.Int256 result)
         {
-            result = new Int256.Int256(PopBytes(), true);
+            PopUInt256(out UInt256 value);
+            result = new Int256.Int256(value);
         }
 
+        /// <summary>
+        /// Pops an Uint256 written in big endian.
+        /// </summary>
+        /// <remarks>
+        /// This method does its own calculations to create the <paramref name="result"/>. It knows that 32 bytes were popped with <see cref="PopBytesByRef"/>. It doesn't have to check the size of span or slice it.
+        /// All it does is <see cref="Unsafe.ReadUnaligned{T}(ref byte)"/> and then reverse endianness if needed. Then it creates <paramref name="result"/>.
+        /// </remarks>
+        /// <param name="result">The returned value.</param>
         public void PopUInt256(out UInt256 result)
         {
-            result = new UInt256(PopBytes(), true);
+            if (Head-- == 0)
+            {
+                Metrics.EvmExceptions++;
+                throw new EvmStackUnderflowException();
+            }
+
+            ref byte bytes = ref Add(ref MemoryMarshal.GetReference(_bytes), Head * 32);
+
+            ulong u3 = ReadUnaligned<ulong>(ref bytes);
+            ulong u2 = ReadUnaligned<ulong>(ref Add(ref bytes, sizeof(ulong)));
+            ulong u1 = ReadUnaligned<ulong>(ref Add(ref bytes, 2 * sizeof(ulong)));
+            ulong u0 = ReadUnaligned<ulong>(ref Add(ref bytes, 3 * sizeof(ulong)));
+
+            if (BitConverter.IsLittleEndian)
+            {
+                u3 = BinaryPrimitives.ReverseEndianness(u3);
+                u2 = BinaryPrimitives.ReverseEndianness(u2);
+                u1 = BinaryPrimitives.ReverseEndianness(u1);
+                u0 = BinaryPrimitives.ReverseEndianness(u0);
+            }
+
+            result = new UInt256(u0, u1, u2, u3);
         }
 
         public Address PopAddress()
@@ -254,7 +310,11 @@ namespace Nethermind.Evm
         {
             EnsureDepth(depth);
 
-            _bytes.Slice((Head - depth) * 32, 32).CopyTo(_bytes.Slice(Head * 32, 32));
+            ref byte source = ref _bytes[(Head - depth) * 32];
+            ref byte destination = ref _bytes[Head * 32];
+
+            WriteUnaligned(ref destination, ReadUnaligned<Word>(ref source));
+            
             if (_tracer.IsTracingInstructions)
             {
                 for (int i = depth; i >= 0; i--)
@@ -269,7 +329,7 @@ namespace Nethermind.Evm
                 throw new EvmStackOverflowException();
             }
         }
-        
+
         public void EnsureDepth(int depth)
         {
             if (Head < depth)
@@ -278,19 +338,18 @@ namespace Nethermind.Evm
                 throw new EvmStackUnderflowException();
             }
         }
-        
+
         public void Swap(int depth)
         {
-            Span<byte> buffer = stackalloc byte[32];
-
             EnsureDepth(depth);
 
-            Span<byte> bottomSpan = _bytes.Slice((Head - depth) * 32, 32);
-            Span<byte> topSpan = _bytes.Slice((Head - 1) * 32, 32);
+            ref byte bottom = ref _bytes[(Head - depth) * 32];
+            ref byte top = ref _bytes[(Head - 1) * 32];
 
-            bottomSpan.CopyTo(buffer);
-            topSpan.CopyTo(bottomSpan);
-            buffer.CopyTo(topSpan);
+            Word bottomWord = ReadUnaligned<Word>(ref bottom);
+
+            WriteUnaligned(ref bottom, ReadUnaligned<Word>(ref top));
+            WriteUnaligned(ref top, bottomWord);
 
             if (_tracer.IsTracingInstructions)
             {
@@ -311,6 +370,25 @@ namespace Nethermind.Evm
             }
 
             return stackTrace;
+        }
+
+        // This structure has an explicit layout, with size equal to the lenght of the vm word. 
+        // ulong fields are added only to make the compiler copy all of them when copying the struct. This might be not needed, 
+        // but as far as I remember, this was the case with JIT it in the past.
+        [StructLayout(LayoutKind.Explicit, Size = 32)]
+        struct Word
+        {
+            [FieldOffset(0)]
+            public ulong u0;
+
+            [FieldOffset(1)]
+            public ulong u1;
+
+            [FieldOffset(2)]
+            public ulong u2;
+
+            [FieldOffset(3)]
+            public ulong u3;
         }
     }
 }

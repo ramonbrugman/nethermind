@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -23,7 +23,6 @@ using Nethermind.Int256;
 using Nethermind.Logging;
 using Nethermind.Network.Rlpx;
 using Nethermind.Stats;
-using Nethermind.Stats.Model;
 using Nethermind.Synchronization;
 using Nethermind.TxPool;
 
@@ -32,7 +31,8 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
     public class Eth62ProtocolHandler : SyncPeerProtocolHandlerBase, IZeroProtocolHandler
     {
         private bool _statusReceived;
-        private TxFloodController _floodController;
+        private readonly TxFloodController _floodController;
+        protected readonly ITxPool _txPool;
 
         public Eth62ProtocolHandler(
             ISession session,
@@ -40,9 +40,10 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
             INodeStatsManager statsManager,
             ISyncServer syncServer,
             ITxPool txPool,
-            ILogManager logManager) : base(session, serializer, statsManager, syncServer, txPool, logManager)
+            ILogManager logManager) : base(session, serializer, statsManager, syncServer, logManager)
         {
             _floodController = new TxFloodController(this, Timestamper.Default, Logger);
+            _txPool = txPool ?? throw new ArgumentNullException(nameof(txPool));
         }
 
         public void DisableTxFiltering()
@@ -50,30 +51,21 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
             _floodController.IsEnabled = false;
         }
 
-        public override byte ProtocolVersion { get; protected set; } = 62;
+        public override byte ProtocolVersion => 62;
         public override string ProtocolCode => Protocol.Eth;
         public override int MessageIdSpaceSize => 8;
         public override string Name => "eth62";
         protected override TimeSpan InitTimeout => Timeouts.Eth62Status;
 
-        public override bool HasAvailableCapability(Capability capability) => false;
-        public override bool HasAgreedCapability(Capability capability) => false;
+        public override event EventHandler<ProtocolInitializedEventArgs>? ProtocolInitialized;
 
-        public override void AddSupportedCapability(Capability capability)
-        {
-        }
-
-        public override event EventHandler<ProtocolInitializedEventArgs> ProtocolInitialized;
-
-        public override event EventHandler<ProtocolEventArgs> SubprotocolRequested
+        public override event EventHandler<ProtocolEventArgs>? SubprotocolRequested
         {
             add { }
             remove { }
         }
 
-        protected virtual void EnrichStatusMessage(StatusMessage statusMessage)
-        {
-        }
+        protected virtual void EnrichStatusMessage(StatusMessage statusMessage) { }
 
         public override void Init()
         {
@@ -85,12 +77,12 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
             }
 
             BlockHeader head = SyncServer.Head;
-            StatusMessage statusMessage = new StatusMessage();
+            StatusMessage statusMessage = new();
             statusMessage.ChainId = (UInt256) SyncServer.ChainId;
             statusMessage.ProtocolVersion = ProtocolVersion;
             statusMessage.TotalDifficulty = head.TotalDifficulty ?? head.Difficulty;
-            statusMessage.BestHash = head.Hash;
-            statusMessage.GenesisHash = SyncServer.Genesis.Hash;
+            statusMessage.BestHash = head.Hash!;
+            statusMessage.GenesisHash = SyncServer.Genesis.Hash!;
             EnrichStatusMessage(statusMessage);
 
             Metrics.StatusesSent++;
@@ -157,7 +149,9 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
                     Handle(getBodiesMsg);
                     break;
                 case Eth62MessageCode.BlockBodies:
-                    HandleBodies(message.Content, size);
+                    BlockBodiesMessage bodiesMsg = Deserialize<BlockBodiesMessage>(message.Content);
+                    ReportIn(bodiesMsg);
+                    HandleBodies(bodiesMsg, size);
                     break;
                 case Eth62MessageCode.NewBlock:
                     NewBlockMessage newBlockMsg = Deserialize<NewBlockMessage>(message.Content);
@@ -180,9 +174,9 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
 
             ReceivedProtocolInitMsg(status);
 
-            SyncPeerProtocolInitializedEventArgs eventArgs = new SyncPeerProtocolInitializedEventArgs(this)
+            SyncPeerProtocolInitializedEventArgs eventArgs = new(this)
             {
-                ChainId = (long) status.ChainId,
+                ChainId = (ulong)status.ChainId,
                 BestHash = status.BestHash,
                 GenesisHash = status.GenesisHash,
                 Protocol = status.Protocol,
@@ -202,12 +196,12 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
             {
                 Transaction tx = transactions[i];
                 tx.DeliveredBy = Node.Id;
-                tx.Timestamp = _timestamper.EpochSeconds;
+                tx.Timestamp = _timestamper.UnixTime.Seconds;
                 AddTxResult result = _txPool.AddTransaction(tx, TxHandlingOptions.None);
                 _floodController.Report(result == AddTxResult.Added);
 
                 if (Logger.IsTrace) Logger.Trace(
-                    $"{Node:c} sent {tx.Hash} tx and it was {result} (chain ID = {tx.Signature.ChainId})");
+                    $"{Node:c} sent {tx.Hash} tx and it was {result} (chain ID = {tx.Signature?.ChainId})");
             }
         }
 
@@ -265,7 +259,7 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
 
             if (Logger.IsTrace) Logger.Trace($"OUT {Counter:D5} NewBlock to {Node:c}");
 
-            NewBlockMessage msg = new NewBlockMessage();
+            NewBlockMessage msg = new();
             msg.Block = block;
             msg.TotalDifficulty = block.TotalDifficulty.Value;
 
@@ -276,8 +270,7 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
         {
             if (Logger.IsTrace) Logger.Trace($"OUT {Counter:D5} HintBlock to {Node:c}");
 
-            NewBlockHashesMessage msg = new NewBlockHashesMessage();
-            msg.BlockHashes = new[] {(blockHash, number)};
+            NewBlockHashesMessage msg = new((blockHash, number));
             Send(msg);
         }
         

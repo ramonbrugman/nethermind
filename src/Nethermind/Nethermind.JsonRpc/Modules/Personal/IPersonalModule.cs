@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -23,8 +23,9 @@ namespace Nethermind.JsonRpc.Modules.Personal
     [RpcModule(ModuleType.Personal)]
     public interface IPersonalModule : IModule
     {   
-        [JsonRpcMethod(Description = "", IsImplemented = false)]
-        ResultWrapper<Address> personal_importRawKey(byte keyData, string passphrase);
+        [JsonRpcMethod(Description = "")]
+        ResultWrapper<Address> personal_importRawKey(byte[] keyData, string passphrase);
+
         ResultWrapper<Address[]> personal_listAccounts();
         
         ResultWrapper<bool> personal_lockAccount(Address address);

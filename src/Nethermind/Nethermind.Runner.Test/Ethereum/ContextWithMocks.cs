@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -45,6 +45,7 @@ using Nethermind.Stats;
 using Nethermind.Synchronization;
 using Nethermind.Synchronization.ParallelSync;
 using Nethermind.Synchronization.Peers;
+using Nethermind.Trie.Pruning;
 using Nethermind.TxPool;
 using Nethermind.Wallet;
 using Nethermind.WebSockets;
@@ -62,7 +63,7 @@ namespace Nethermind.Runner.Test.Ethereum
                 Wallet = Substitute.For<IWallet>(),
                 BlockTree = Substitute.For<IBlockTree>(),
                 SyncServer = Substitute.For<ISyncServer>(),
-                DbProvider = Substitute.For<IDbProvider>(),
+                DbProvider = TestMemDbProvider.Init(),
                 PeerManager = Substitute.For<IPeerManager>(),
                 SpecProvider = Substitute.For<ISpecProvider>(),
                 EthereumEcdsa = Substitute.For<IEthereumEcdsa>(),
@@ -109,6 +110,8 @@ namespace Nethermind.Runner.Test.Ethereum
                 SyncPeerPool = Substitute.For<ISyncPeerPool>(),
                 WebSocketsManager = Substitute.For<IWebSocketsManager>(),
                 ChainLevelInfoRepository = Substitute.For<IChainLevelInfoRepository>(),
+                TrieStore = Substitute.For<ITrieStore>(),
+                ReadOnlyTrieStore = Substitute.For<ITrieStore>().AsReadOnly()
             };
     }
 }

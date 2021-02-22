@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -67,9 +67,9 @@ namespace Nethermind.Network.Rlpx.Handshake
             }
 
             AuthMessage authMessage = new AuthMessage();
-            authMessage.Signature = new Signature(bytes.Slice(SigOffset, SigLength - 1), bytes[64]);
+            authMessage.Signature = new Signature(bytes.AsSpan().Slice(SigOffset, SigLength - 1), bytes[64]);
             authMessage.EphemeralPublicHash = new Keccak(bytes.Slice(EphemeralHashOffset, EphemeralHashLength));
-            authMessage.PublicKey = new PublicKey(bytes.Slice(PublicKeyOffset, PublicKeyLength));
+            authMessage.PublicKey = new PublicKey(bytes.AsSpan().Slice(PublicKeyOffset, PublicKeyLength));
             authMessage.Nonce = bytes.Slice(NonceOffset, NonceLength);
             authMessage.IsTokenUsed = bytes[IsTokenUsedOffset] == 0x01;
             return authMessage;

@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@ namespace Nethermind.Crypto
             //    }
             //}
 
-            Signature signature = new Signature(signatureBytes, recoveryId);
+            Signature signature = new(signatureBytes, recoveryId);
 
 #if DEBUG
             PublicKey address = RecoverPublicKey(signature, message);
@@ -62,7 +62,7 @@ namespace Nethermind.Crypto
             return signature;
         }
 
-        public PublicKey RecoverPublicKey(Signature signature, Keccak message)
+        public PublicKey? RecoverPublicKey(Signature signature, Keccak message)
         {
             Span<byte> publicKey = stackalloc byte[65];
             bool success = Proxy.RecoverKeyFromCompact(publicKey, message.Bytes, signature.Bytes, signature.RecoveryId, false);

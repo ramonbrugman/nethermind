@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@ using FluentAssertions;
 using Nethermind.Core.Extensions;
 using Nethermind.Evm.Precompiles;
 using Nethermind.Evm.Precompiles.Bls.Shamatar;
+using Nethermind.Specs.Forks;
 using NUnit.Framework;
 
 namespace Nethermind.Evm.Test
@@ -33,7 +34,7 @@ namespace Nethermind.Evm.Test
             foreach (var (input, expectedResult) in Inputs)
             {
                 IPrecompile precompile = G1AddPrecompile.Instance;
-                (byte[] output, bool success) = precompile.Run(input);
+                (byte[] output, bool success) = precompile.Run(input, MuirGlacier.Instance);
                 output.Should().BeEquivalentTo(expectedResult);
                 success.Should().BeTrue();
             }

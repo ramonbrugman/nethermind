@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -287,7 +287,6 @@ namespace Nethermind.JsonRpc.Modules.Eth
             return ResultWrapper<byte[]>.Success(code);
         }
 
-
         public ResultWrapper<byte[]> eth_sign(Address addressData, byte[] message)
         {
             Signature sig;
@@ -449,7 +448,7 @@ namespace Nethermind.JsonRpc.Modules.Eth
             return ResultWrapper<BlockForRpc>.Success(block == null ? null : new BlockForRpc(block, returnFullTransactionObjects));
         }
 
-        public ResultWrapper<TransactionForRpc> eth_getTransactionByHash(Keccak transactionHash)
+        public Task<ResultWrapper<TransactionForRpc>> eth_getTransactionByHash(Keccak transactionHash)
         {
             _txPoolBridge.TryGetPendingTransaction(transactionHash, out Transaction transaction);
             TxReceipt receipt = null; // note that if transaction is pending then for sure no receipt is known
@@ -458,14 +457,14 @@ namespace Nethermind.JsonRpc.Modules.Eth
                 (receipt, transaction) = _blockchainBridge.GetTransaction(transactionHash);
                 if (transaction == null)
                 {
-                    return ResultWrapper<TransactionForRpc>.Success(null);
+                    return Task.FromResult(ResultWrapper<TransactionForRpc>.Success(null));
                 }
             }
 
             RecoverTxSenderIfNeeded(transaction);
             TransactionForRpc transactionModel = new TransactionForRpc(receipt?.BlockHash, receipt?.BlockNumber, receipt?.Index, transaction);
             if (_logger.IsTrace) _logger.Trace($"eth_getTransactionByHash request {transactionHash}, result: {transactionModel.Hash}");
-            return ResultWrapper<TransactionForRpc>.Success(transactionModel);
+            return Task.FromResult(ResultWrapper<TransactionForRpc>.Success(transactionModel));
         }
 
         public ResultWrapper<TransactionForRpc[]> eth_pendingTransactions()
@@ -715,16 +714,16 @@ namespace Nethermind.JsonRpc.Modules.Eth
             return ResultWrapper<AccountProof>.Success(accountProofCollector.BuildResult());
         }
 
-        public ResultWrapper<long> eth_chainId()
+        public ResultWrapper<ulong> eth_chainId()
         {
             try
             {
-                long chainId = _blockchainBridge.GetChainId();
-                return ResultWrapper<long>.Success(chainId);
+                ulong chainId = _blockchainBridge.GetChainId();
+                return ResultWrapper<ulong>.Success(chainId);
             }
             catch (Exception ex)
             {
-                return ResultWrapper<long>.Fail(ex.Message, ErrorCodes.InternalError, 0L);
+                return ResultWrapper<ulong>.Fail(ex.Message, ErrorCodes.InternalError, 0L);
             }
         }
 

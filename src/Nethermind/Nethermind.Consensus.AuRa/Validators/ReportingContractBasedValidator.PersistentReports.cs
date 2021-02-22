@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -17,8 +17,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Nethermind.Abi;
+using Nethermind.Blockchain;
 using Nethermind.Consensus.Transactions;
 using Nethermind.Core;
 using Nethermind.Int256;
@@ -43,7 +45,7 @@ namespace Nethermind.Consensus.AuRa.Validators
         private const int ReportsSkipBlocks = 1;
 
         private readonly LinkedList<PersistentReport> _persistentReports;
-        private long _resentReportsInBlock = 0;
+        private long _sentReportsInBlock = 0;
         
         public IEnumerable<Transaction> GetTransactions(BlockHeader parent, long gasLimit)
         {
@@ -56,21 +58,36 @@ namespace Nethermind.Consensus.AuRa.Validators
                 }
             }
 
-            if (_contractValidator.ForSealing && IsPosdao(parent.Number + 1))
+            long currentBlockNumber = parent.Number + 1;
+            
+            if (_contractValidator.ForSealing && IsPosdao(currentBlockNumber))
             {
                 FilterReports(parent);
-                foreach (var persistentReport in _persistentReports.Take(MaxReportsPerBlock))
+
+                foreach (Transaction tx in GetPersistentReportsTransactions(gasLimit, currentBlockNumber).Take(MaxReportsPerBlock))
                 {
-                    var transaction = ValidatorContract.ReportMalicious(persistentReport.ValidatorAddress, persistentReport.BlockNumber, persistentReport.Proof);
-                    if (transaction != null && gasLimit >= transaction.GasLimit)
+                    yield return tx;
+                }
+            }
+        }
+
+        private IEnumerable<Transaction> GetPersistentReportsTransactions(long gasLimit, long currentBlockNumber)
+        {
+            foreach (var persistentReport in _persistentReports)
+            {
+                // we want to wait at least 1 block with persistent reports to avoid duplicates
+                if (persistentReport.BlockNumber + ReportsSkipBlocks < currentBlockNumber)
+                {
+                    var tx = ValidatorContract.ReportMalicious(persistentReport.MaliciousValidator, persistentReport.BlockNumber, persistentReport.Proof);
+                    if (tx != null && gasLimit >= tx.GasLimit)
                     {
-                        gasLimit -= transaction.GasLimit;
-                        yield return transaction;
+                        gasLimit -= tx.GasLimit;
+                        yield return tx;
                     }
                 }
             }
         }
-        
+
         private void ResendPersistedReports(BlockHeader blockHeader)
         {
             var blockNumber = blockHeader.Number;
@@ -83,9 +100,9 @@ namespace Nethermind.Consensus.AuRa.Validators
                 FilterReports(blockHeader);
                 TruncateReports();
 
-                if (blockNumber > _resentReportsInBlock + ReportsSkipBlocks)
+                if (blockNumber > _sentReportsInBlock + ReportsSkipBlocks)
                 {
-                    _resentReportsInBlock = blockNumber;
+                    _sentReportsInBlock = blockNumber;
                     foreach (var persistentReport in _persistentReports)
                     {
                         try
@@ -94,7 +111,7 @@ namespace Nethermind.Consensus.AuRa.Validators
                         }
                         catch (AbiException e)
                         {
-                            if (_logger.IsWarn) _logger.Warn($"Cannot report validator {persistentReport.ValidatorAddress} for misbehavior on block {persistentReport.BlockNumber}: {e.Message}.");
+                            if (_logger.IsWarn) _logger.Warn($"Cannot report validator {persistentReport.MaliciousValidator} for misbehavior on block {persistentReport.BlockNumber}: {e.Message}.");
                         }
                     }
                 }
@@ -109,19 +126,19 @@ namespace Nethermind.Consensus.AuRa.Validators
                 var next = node.Next;
                 var persistentReport = node.Value;
                 
-                if (_logger.IsTrace) _logger.Trace($"Checking if report of malicious validator {persistentReport.ValidatorAddress} at block {persistentReport.BlockNumber} should be removed from cache.");
+                if (_logger.IsTrace) _logger.Trace($"Checking if report of malicious validator {persistentReport.MaliciousValidator} at block {persistentReport.BlockNumber} should be removed from cache.");
 
                 try
                 {
-                    if (!_contractValidator.ValidatorContract.ShouldValidatorReport(ValidatorContract.NodeAddress, persistentReport.ValidatorAddress, persistentReport.BlockNumber, parent))
+                    if (!_contractValidator.ValidatorContract.ShouldValidatorReport(parent, ValidatorContract.NodeAddress, persistentReport.MaliciousValidator, persistentReport.BlockNumber))
                     {
                         _persistentReports.Remove(node);
-                        if (_logger.IsTrace) _logger.Trace("Successfully removed report from report cache.");
+                        if (_logger.IsTrace) _logger.Trace($"Successfully removed report of malicious validator {persistentReport.MaliciousValidator} at block {persistentReport.BlockNumber} from report cache.");
                     }
                 }
                 catch (AbiException e)
                 {
-                    if (_logger.IsError) _logger.Error("Failed to query report status, dropping pending report.", e);
+                    if (_logger.IsError) _logger.Error($"Failed to query report status, dropping pending report of malicious validator {persistentReport.MaliciousValidator} at block {persistentReport.BlockNumber}. {new StackTrace()}", e);
                     _persistentReports.Remove(node);
                 }
 
@@ -146,13 +163,13 @@ namespace Nethermind.Consensus.AuRa.Validators
 
         internal class PersistentReport : IEquatable<PersistentReport>
         {
-            public Address ValidatorAddress { get; }
+            public Address MaliciousValidator { get; }
             public UInt256 BlockNumber { get; }
             public byte[] Proof { get; }
 
-            public PersistentReport(Address validatorAddress, UInt256 blockNumber, byte[] proof)
+            public PersistentReport(Address maliciousValidator, UInt256 blockNumber, byte[] proof)
             {
-                ValidatorAddress = validatorAddress;
+                MaliciousValidator = maliciousValidator;
                 BlockNumber = blockNumber;
                 Proof = proof;
             }
@@ -161,7 +178,7 @@ namespace Nethermind.Consensus.AuRa.Validators
             {
                 if (ReferenceEquals(null, other)) return false;
                 if (ReferenceEquals(this, other)) return true;
-                return Equals(ValidatorAddress, other.ValidatorAddress) && BlockNumber == other.BlockNumber;
+                return Equals(MaliciousValidator, other.MaliciousValidator) && BlockNumber == other.BlockNumber;
             }
 
             public override bool Equals(object obj)
@@ -172,7 +189,7 @@ namespace Nethermind.Consensus.AuRa.Validators
                 return Equals((PersistentReport) obj);
             }
 
-            public override int GetHashCode() => HashCode.Combine(ValidatorAddress, BlockNumber);
+            public override int GetHashCode() => HashCode.Combine(MaliciousValidator, BlockNumber);
         }
     }
 }

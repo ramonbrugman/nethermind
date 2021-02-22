@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -19,12 +19,12 @@ using Nethermind.Core;
 
 namespace Nethermind.Serialization.Rlp
 {
-    public class BlockDecoder : IRlpDecoder<Block>, IRlpValueDecoder<Block>
+    public class BlockDecoder : IRlpValueDecoder<Block>, IRlpStreamDecoder<Block>
     {
-        private HeaderDecoder _headerDecoder = new HeaderDecoder();
-        private TransactionDecoder _txDecoder = new TransactionDecoder();
+        private readonly HeaderDecoder _headerDecoder = new();
+        private readonly TxDecoder _txDecoder = new();
         
-        public Block Decode(RlpStream rlpStream, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+        public Block? Decode(RlpStream rlpStream, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
         {
             if (rlpStream.IsNextItemNull())
             {
@@ -100,9 +100,9 @@ namespace Nethermind.Serialization.Rlp
             return txLength;
         }
 
-        public int GetLength(Block item, RlpBehaviors rlpBehaviors)
+        public int GetLength(Block? item, RlpBehaviors rlpBehaviors)
         {
-            if (item == null)
+            if (item is null)
             {
                 return 1;
             }
@@ -110,7 +110,7 @@ namespace Nethermind.Serialization.Rlp
             return Rlp.LengthOfSequence(GetContentLength(item, rlpBehaviors).Total);
         }
 
-        public Block Decode(ref Rlp.ValueDecoderContext decoderContext, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+        public Block? Decode(ref Rlp.ValueDecoderContext decoderContext, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
         {
             if (decoderContext.IsNextItemNull())
             {
@@ -125,7 +125,7 @@ namespace Nethermind.Serialization.Rlp
 
             int transactionsSequenceLength = decoderContext.ReadSequenceLength();
             int transactionsCheck = decoderContext.Position + transactionsSequenceLength;
-            List<Transaction> transactions = new List<Transaction>();
+            List<Transaction> transactions = new();
             while (decoderContext.Position < transactionsCheck)
             {
                 transactions.Add(Rlp.Decode<Transaction>(ref decoderContext));
@@ -151,21 +151,21 @@ namespace Nethermind.Serialization.Rlp
             return new Block(header, transactions, ommerHeaders);
         }
 
-        public Rlp Encode(Block item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+        public Rlp Encode(Block? item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
         {
-            if (item == null)
+            if (item is null)
             {
                 return Rlp.OfEmptySequence;
             }
             
-            RlpStream rlpStream = new RlpStream(GetLength(item, rlpBehaviors));
+            RlpStream rlpStream = new(GetLength(item, rlpBehaviors));
             Encode(rlpStream, item, rlpBehaviors);
             return new Rlp(rlpStream.Data);
         }
         
-        public void Encode(RlpStream stream, Block item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
+        public void Encode(RlpStream stream, Block? item, RlpBehaviors rlpBehaviors = RlpBehaviors.None)
         {
-            if (item == null)
+            if (item is null)
             {
                 stream.EncodeNullObject();
                 return;

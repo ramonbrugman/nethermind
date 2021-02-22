@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Nethermind.Core;
 using Nethermind.Core.Crypto;
 using Nethermind.Core.Extensions;
 using Nethermind.Db;
@@ -77,9 +78,9 @@ namespace Nethermind.Synchronization.BeamSync
 
         private void SyncModeSelectorOnChanged(object? sender, SyncModeChangedEventArgs e)
         {
-            if ((e.Current & SyncMode.Full) == SyncMode.Full)
+            if (e.IsBeamSyncFinished())
             {
-                // the beam processor either already switched or is about ti switch to the full sync mode
+                // the beam processor either already switched or is about to switch to the full sync mode
                 // we should be already switched to the new database
                 lock (_finishLock)
                 {
@@ -102,7 +103,7 @@ namespace Nethermind.Synchronization.BeamSync
         {
             // at this stage beam executors are already cancelled and they no longer save to beam DB
             // standard processor is for sure not started yet - it is waiting for us to replace the target
-            if ((e.Current & SyncMode.Full) == SyncMode.Full)
+            if (e.IsBeamSyncFinished())
             {
                 Interlocked.Exchange(ref _targetDbForSaves, _stateDb);
             }
@@ -171,7 +172,7 @@ namespace Nethermind.Synchronization.BeamSync
                         }
                     }
 
-                    byte[] fromMem = _tempDb[key] ?? _stateDb[key];
+                    byte[]? fromMem = _tempDb[key] ?? _stateDb[key];
                     if (fromMem == null)
                     {
                         if (_logger.IsTrace) _logger.Trace($"Beam sync miss - {key.ToHexString()} - retrieving");
@@ -261,12 +262,9 @@ namespace Nethermind.Synchronization.BeamSync
             throw new NotSupportedException();
         }
 
-        public void StartBatch()
+        public IBatch StartBatch()
         {
-        }
-
-        public void CommitBatch()
-        {
+            return this.LikeABatch();
         }
 
         public void Remove(byte[] key)
@@ -303,23 +301,23 @@ namespace Nethermind.Synchronization.BeamSync
                 }
 
                 StateSyncItem[] requestedNodes;
-                if (_requestedNodes.Count < 256)
+                if (_requestedNodes.Count < StateSyncFeed.MaxRequestSize)
                 {
                     // do not make it state sync item :)
-                    requestedNodes = _requestedNodes.Select(n => new StateSyncItem(n, NodeDataType.State, 0, 0)).ToArray();
+                    requestedNodes = _requestedNodes.Select(n => new StateSyncItem(n, NodeDataType.State)).ToArray();
                     _requestedNodes.Clear();
                 }
                 else
                 {
                     Keccak[] source = _requestedNodes.ToArray();
-                    requestedNodes = new StateSyncItem[256];
+                    requestedNodes = new StateSyncItem[StateSyncFeed.MaxRequestSize];
                     _requestedNodes.Clear();
                     for (int i = 0; i < source.Length; i++)
                     {
-                        if (i < 256)
+                        if (i < StateSyncFeed.MaxRequestSize)
                         {
                             // not state sync item
-                            requestedNodes[i] = new StateSyncItem(source[i], NodeDataType.State, 0, 0);
+                            requestedNodes[i] = new StateSyncItem(source[i], NodeDataType.State);
                         }
                         else
                         {
@@ -336,29 +334,29 @@ namespace Nethermind.Synchronization.BeamSync
             return Task.FromResult<StateSyncBatch?>(request);
         }
 
-        public override SyncResponseHandlingResult HandleResponse(StateSyncBatch? stateSyncBatch)
+        public override SyncResponseHandlingResult HandleResponse(StateSyncBatch? batch)
         {
-            if (stateSyncBatch == null)
+            if (batch == null)
             {
                 if (_logger.IsWarn) _logger.Warn($"{nameof(BeamSyncDb)} received a NULL batch as a response.");
                 return SyncResponseHandlingResult.InternalError;
             }
 
-            if (stateSyncBatch.ConsumerId != FeedId)
+            if (batch.ConsumerId != FeedId)
             {
-                if (_logger.IsWarn) _logger.Warn($"Beam sync response sent by feed {stateSyncBatch.ConsumerId} came back to feed {FeedId}");
+                if (_logger.IsWarn) _logger.Warn($"Beam sync response sent by feed {batch.ConsumerId} came back to feed {FeedId}");
                 return SyncResponseHandlingResult.InternalError;
             }
 
             bool wasDataInvalid = false;
             int consumed = 0;
 
-            byte[][]? data = stateSyncBatch.Responses;
+            byte[][]? data = batch.Responses;
             if (data != null)
             {
-                for (int i = 0; i < Math.Min(data.Length, stateSyncBatch.RequestedNodes.Length); i++)
+                for (int i = 0; i < Math.Min(data.Length, batch.RequestedNodes.Length); i++)
                 {
-                    Keccak key = stateSyncBatch.RequestedNodes[i].Hash;
+                    Keccak key = batch.RequestedNodes[i].Hash;
                     if (data[i] != null)
                     {
                         if (Keccak.Compute(data[i]) == key)

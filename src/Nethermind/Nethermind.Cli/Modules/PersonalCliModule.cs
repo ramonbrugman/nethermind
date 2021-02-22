@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -15,12 +15,19 @@
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 
 using Jint.Native;
+using Nethermind.JsonRpc.Data;
 
 namespace Nethermind.Cli.Modules
 {
     [CliModule("personal")]
     public class PersonalCliModule : CliModuleBase
     {
+        [CliFunction("personal", "importRawKey")]
+        public string? ImportRawKey(string keyData, string passphrase)
+        {
+            return NodeManager.Post<string>($"personal_importRawKey", keyData, passphrase).Result;
+        }
+
         [CliProperty("personal", "listAccounts")]
         public JsValue ListAccounts()
         {
@@ -28,7 +35,7 @@ namespace Nethermind.Cli.Modules
         }
 
         [CliFunction("personal", "newAccount")]
-        public string NewAccount(string password)
+        public string? NewAccount(string password)
         {
             return NodeManager.Post<string>($"personal_newAccount", password).Result;
         }

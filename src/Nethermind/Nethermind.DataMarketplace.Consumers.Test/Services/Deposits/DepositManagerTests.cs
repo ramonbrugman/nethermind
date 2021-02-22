@@ -51,7 +51,7 @@ namespace Nethermind.DataMarketplace.Consumers.Test.Services.Deposits
         private DepositDetails _details;
         private DataAsset _asset;
         private DataAsset _assetUnderMaintenance;
-        private DataAsset _unavailableAsset;
+        private DataAsset _closedAsset;
         private DataAsset _withKyc;
 
         private IWallet _wallet;
@@ -63,7 +63,7 @@ namespace Nethermind.DataMarketplace.Consumers.Test.Services.Deposits
         {
             DataAssetProvider provider = new DataAssetProvider(_providerAddress, "provider");
             _asset = new DataAsset(Keccak.Compute("1"), "name", "desc", 1, DataAssetUnitType.Unit, 1000, 10000, new DataAssetRules(new DataAssetRule(1)), provider, state: DataAssetState.Published);
-            _unavailableAsset = new DataAsset(Keccak.Compute("2"), "name", "desc", 1, DataAssetUnitType.Unit, 1000, 10000, new DataAssetRules(new DataAssetRule(1)), provider, state: DataAssetState.Unavailable);
+            _closedAsset = new DataAsset(Keccak.Compute("2"), "name", "desc", 1, DataAssetUnitType.Unit, 1000, 10000, new DataAssetRules(new DataAssetRule(1)), provider, state: DataAssetState.Closed);
             _assetUnderMaintenance = new DataAsset(Keccak.Compute("3"), "name", "desc", 1, DataAssetUnitType.Unit, 1000, 10000, new DataAssetRules(new DataAssetRule(1)), provider, state: DataAssetState.UnderMaintenance);
             _withKyc = new DataAsset(Keccak.Compute("4"), "name", "desc", 1, DataAssetUnitType.Unit, 1000, 10000, new DataAssetRules(new DataAssetRule(1)), provider, state: DataAssetState.Published, kycRequired: true);
 
@@ -81,12 +81,13 @@ namespace Nethermind.DataMarketplace.Consumers.Test.Services.Deposits
             IProviderRepository providerRepository = new ProviderInMemoryRepository(depositsInMemoryDb);
             IConsumerNotifier notifier = new ConsumerNotifier(Substitute.For<INdmNotifier>());
             DataAssetService dataAssetService = new DataAssetService(providerRepository, notifier, LimboLogs.Instance);
+            IDepositUnitsCalculator depositUnitsCalculator = Substitute.For<IDepositUnitsCalculator>();
             INdmPeer peer = Substitute.For<INdmPeer>();
             peer.NodeId.Returns(TestItem.PublicKeyB);
             peer.ProviderAddress.Returns(_providerAddress);
 
             dataAssetService.AddDiscovered(_asset, peer);
-            dataAssetService.AddDiscovered(_unavailableAsset, peer);
+            dataAssetService.AddDiscovered(_closedAsset, peer);
             dataAssetService.AddDiscovered(_assetUnderMaintenance, peer);
             dataAssetService.AddDiscovered(_withKyc, peer);
             
@@ -94,7 +95,7 @@ namespace Nethermind.DataMarketplace.Consumers.Test.Services.Deposits
             ProviderService providerService = new ProviderService(providerRepository, notifier, LimboLogs.Instance);
             providerService.Add(peer);
 
-            _depositManager = new DepositManager(depositService, unitsCalculator, dataAssetService, _kycVerifier, providerService, new AbiEncoder(), new CryptoRandom(), _wallet, Substitute.For<IGasPriceService>(), new DepositDetailsInMemoryRepository(depositsInMemoryDb), Timestamper.Default, LimboLogs.Instance, 6, false);
+            _depositManager = new DepositManager(depositService, unitsCalculator, dataAssetService, _kycVerifier, providerService, new AbiEncoder(), new CryptoRandom(), _wallet, Substitute.For<IGasPriceService>(), new DepositDetailsInMemoryRepository(depositsInMemoryDb, depositUnitsCalculator), Timestamper.Default, LimboLogs.Instance, 6, false);
         }
 
         [Test]
@@ -161,10 +162,10 @@ namespace Nethermind.DataMarketplace.Consumers.Test.Services.Deposits
         }
 
         [Test]
-        public async Task Cannot_make_deposit_on_unavailable_asset()
+        public async Task Cannot_make_deposit_on_closed_asset()
         {
             Address account = _wallet.GetAccounts()[0];
-            Keccak result = await _depositManager.MakeAsync(_unavailableAsset.Id, _unavailableAsset.MinUnits, _unavailableAsset.MinUnits * _unavailableAsset.UnitPrice, account, 20.GWei());
+            Keccak result = await _depositManager.MakeAsync(_closedAsset.Id, _closedAsset.MinUnits, _closedAsset.MinUnits * _closedAsset.UnitPrice, account, 20.GWei());
             result.Should().BeNull();
         }
 

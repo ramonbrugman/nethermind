@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@ namespace Nethermind.Blockchain
         /// <summary>
         /// Chain ID that identifies the chain among the public and private chains (different IDs for mainnet, ETH classic, etc.)
         /// </summary>
-        int ChainId { get; }
+        ulong ChainId { get; }
         
         /// <summary>
         /// Genesis block or <value>null</value> if genesis has not been processed yet
@@ -50,7 +50,7 @@ namespace Nethermind.Blockchain
         /// <summary>
         /// Lowest header added in reverse insert
         /// </summary>
-        BlockHeader LowestInsertedHeader { get; }
+        BlockHeader? LowestInsertedHeader { get; }
 
         /// <summary>
         /// Lowest body added in reverse insert
@@ -86,7 +86,7 @@ namespace Nethermind.Blockchain
         /// <param name="block">Block to be included</param>
         /// <param name="shouldProcess">Whether a block should be processed or just added to the store</param>
         /// <returns>Result of the operation, eg. Added, AlreadyKnown, etc.</returns>
-        AddBlockResult SuggestBlock(Block block, bool shouldProcess = true);
+        AddBlockResult SuggestBlock(Block block, bool shouldProcess = true, bool? setAsMain = null);
 
         /// <summary>
         /// Suggests a block header (without body)
@@ -135,6 +135,7 @@ namespace Nethermind.Blockchain
         void DeleteInvalidBlock(Block invalidBlock);
 
         event EventHandler<BlockEventArgs> NewBestSuggestedBlock;
+        event EventHandler<BlockEventArgs> NewSuggestedBlock;
         event EventHandler<BlockReplacementEventArgs> BlockAddedToMain;
         event EventHandler<BlockEventArgs> NewHeadBlock;
 

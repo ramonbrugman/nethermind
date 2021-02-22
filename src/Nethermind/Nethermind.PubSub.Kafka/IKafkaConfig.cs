@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@ using Nethermind.Config;
 
 namespace Nethermind.PubSub.Kafka
 {
+    [ConfigCategory(HiddenFromDocs = true)]
     public interface IKafkaConfig : IConfig
     {
         [ConfigItem(Description = "If 'true' then it enables the Kafka producer which can be configured to stream the transactions data.", DefaultValue = "false")]

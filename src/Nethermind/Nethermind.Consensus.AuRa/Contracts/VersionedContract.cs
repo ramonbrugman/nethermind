@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -19,11 +19,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
+using Nethermind.Abi;
 using Nethermind.Blockchain.Contracts;
 using Nethermind.Core;
 using Nethermind.Core.Caching;
 using Nethermind.Core.Crypto;
 using Nethermind.Int256;
+using Nethermind.Logging;
 
 namespace Nethermind.Consensus.AuRa.Contracts
 {
@@ -33,30 +35,41 @@ namespace Nethermind.Consensus.AuRa.Contracts
 
         private readonly IVersionedContract _versionSelectorContract;
         private readonly ICache<Keccak, UInt256> _versionsCache;
-        
-        protected VersionedContract(IDictionary<UInt256, T> versions, ICache<Keccak, UInt256> cache, long activation)
+        private readonly ILogger _logger;
+
+        protected VersionedContract(IDictionary<UInt256, T> versions, ICache<Keccak, UInt256> cache, long activation, ILogManager logManager)
         {
             _versions = versions ?? throw new ArgumentNullException(nameof(versions));
             _versionSelectorContract = versions.Values.Last();
             Activation = activation;
             _versionsCache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _logger = logManager.GetClassLogger();
         }
 
-        public T ResolveVersion(BlockHeader blockHeader)
+        public T? ResolveVersion(BlockHeader blockHeader)
         {
             this.BlockActivationCheck(blockHeader);
-            
+
             if (!_versionsCache.TryGet(blockHeader.Hash, out var versionNumber))
             {
-                versionNumber = _versionSelectorContract.ContractVersion(blockHeader);
-                _versionsCache.Set(blockHeader.Hash, versionNumber);
+                try
+                {
+                    versionNumber = _versionSelectorContract.ContractVersion(blockHeader);
+                    _versionsCache.Set(blockHeader.Hash, versionNumber);
+                }
+                catch (AbiException ex)
+                {
+                    if (_logger.IsWarn) _logger.Warn($"The contract version set to 1: {ex}");
+                    versionNumber = UInt256.One;
+                    _versionsCache.Set(blockHeader.Hash, versionNumber);
+                }
             }
-            
+
             return ResolveVersion(versionNumber);
         }
 
-        private T ResolveVersion(UInt256 versionNumber) => _versions.TryGetValue(versionNumber, out var contract) ? contract : default;
-        
+        private T? ResolveVersion(UInt256 versionNumber) => _versions.TryGetValue(versionNumber, out var contract) ? contract : default;
+
         public long Activation { get; }
     }
 }

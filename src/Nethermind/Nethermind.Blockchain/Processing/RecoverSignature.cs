@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ namespace Nethermind.Blockchain.Processing
         /// <param name="txPool">Finding transactions in mempool can speed up address recovery.</param>
         /// <param name="specProvider">Spec Provider</param>
         /// <param name="logManager">Logging</param>
-        public RecoverSignatures(IEthereumEcdsa ecdsa, ITxPool txPool, ISpecProvider specProvider, ILogManager logManager)
+        public RecoverSignatures(IEthereumEcdsa? ecdsa, ITxPool? txPool, ISpecProvider? specProvider, ILogManager? logManager)
         {
             _ecdsa = ecdsa ?? throw new ArgumentNullException(nameof(ecdsa));
             _txPool = txPool ?? throw new ArgumentNullException(nameof(ecdsa));
@@ -57,10 +57,9 @@ namespace Nethermind.Blockchain.Processing
             for (int i = 0; i < block.Transactions.Length; i++)
             {
                 Transaction blockTransaction = block.Transactions[i];
+                _txPool.TryGetPendingTransaction(blockTransaction.Hash, out Transaction? transaction);
                 
-                _txPool.TryGetPendingTransaction(blockTransaction.Hash, out var transaction);
                 Address sender = transaction?.SenderAddress;
-
                 Address blockTransactionAddress = blockTransaction.SenderAddress;
                 
                 blockTransaction.SenderAddress = sender ?? _ecdsa.RecoverAddress(blockTransaction, !releaseSpec.ValidateChainId);

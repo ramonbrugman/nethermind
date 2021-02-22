@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@ using Nethermind.Core.Extensions;
 
 namespace Nethermind.Network
 {
-    public struct ForkId : IEquatable<ForkId>
+    public readonly struct ForkId : IEquatable<ForkId>
     {
         public ForkId(byte[] forkHash, long next)
         {
@@ -28,6 +28,7 @@ namespace Nethermind.Network
         }
 
         public byte[] ForkHash { get; }
+        
         public long Next { get; }
 
         public bool Equals(ForkId other)
@@ -43,6 +44,11 @@ namespace Nethermind.Network
         public override int GetHashCode()
         {
             return HashCode.Combine(ForkHash.GetSimplifiedHashCode(), Next);
+        }
+
+        public override string ToString()
+        {
+            return $"{ForkHash.ToHexString()} {Next}";
         }
     }
 }

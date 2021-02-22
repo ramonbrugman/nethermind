@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -29,9 +29,6 @@ namespace Nethermind.Network.P2P
         void Init();
         void HandleMessage(Packet message);
         void DisconnectProtocol(DisconnectReason disconnectReason, string details);
-        bool HasAvailableCapability(Capability capability);
-        bool HasAgreedCapability(Capability capability);
-        void AddSupportedCapability(Capability capability);
         event EventHandler<ProtocolInitializedEventArgs> ProtocolInitialized;
         event EventHandler<ProtocolEventArgs> SubprotocolRequested;
     }

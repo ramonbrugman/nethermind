@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Nethermind.Blockchain;
 using Nethermind.Blockchain.Filters;
 using Nethermind.Blockchain.Find;
 using Nethermind.Core;
@@ -44,7 +43,7 @@ namespace Nethermind.JsonRpc.Modules.Eth
             _wallet = wallet;
         }
 
-        public ResultWrapper<long> eth_chainId()
+        public ResultWrapper<ulong> eth_chainId()
         {
             throw new NotSupportedException();
         }
@@ -139,12 +138,12 @@ namespace Nethermind.JsonRpc.Modules.Eth
             var transaction = rpcTx.ToTransactionWithDefaults();
             if (transaction.Signature is null)
             {
-                var chainIdResult = await _proxy.eth_chainId();
-                var chainId = chainIdResult?.IsValid == true ? (int) chainIdResult.Result : 0;
-                var nonceResult =
+                RpcResult<UInt256> chainIdResult = await _proxy.eth_chainId();
+                ulong chainId = chainIdResult?.IsValid == true ? (ulong)chainIdResult.Result : 0;
+                RpcResult<UInt256?> nonceResult =
                     await _proxy.eth_getTransactionCount(transaction.SenderAddress, BlockParameterModel.Pending);
                 transaction.Nonce = nonceResult?.IsValid == true ? nonceResult.Result ?? UInt256.Zero : UInt256.Zero;
-                _wallet.Sign(transaction, chainId);
+                WalletExtensions.Sign(_wallet, transaction, chainId);
             }
 
             return ResultWrapper<Keccak>.From(await _proxy.eth_sendRawTransaction(Rlp.Encode(transaction).Bytes));
@@ -177,9 +176,13 @@ namespace Nethermind.JsonRpc.Modules.Eth
             throw new NotSupportedException();
         }
 
-        public ResultWrapper<TransactionForRpc> eth_getTransactionByHash(Keccak transactionHash)
+        public async Task<ResultWrapper<TransactionForRpc>> eth_getTransactionByHash(Keccak transactionHash)
         {
-            throw new NotSupportedException();
+            var result = await _proxy.eth_getTransactionByHash(transactionHash);
+            var transaction = MapTransaction(result.Result);
+            return transaction is null
+                ? ResultWrapper<TransactionForRpc>.Fail("Transaction was not found.")
+                : ResultWrapper<TransactionForRpc>.Success(transaction);
         }
 
         public ResultWrapper<TransactionForRpc[]> eth_pendingTransactions()
@@ -274,6 +277,28 @@ namespace Nethermind.JsonRpc.Modules.Eth
             BlockParameter blockParameter)
         {
             throw new NotSupportedException();
+        }
+
+        private static TransactionForRpc MapTransaction(TransactionModel transaction)
+        {
+            if (transaction is null)
+            {
+                return null;
+            }
+
+            return new TransactionForRpc
+            {
+                BlockHash = transaction.BlockHash,
+                BlockNumber = (long)transaction.BlockNumber,
+                From = transaction.From,
+                To = transaction.To,
+                Gas = (long)transaction.Gas,
+                GasPrice = transaction.GasPrice,
+                Hash = transaction.Hash,
+                Input = transaction.Input,
+                Nonce = transaction.Nonce,
+                Value = transaction.Value
+            };
         }
 
         private static ReceiptForRpc MapReceipt(ReceiptModel receipt)

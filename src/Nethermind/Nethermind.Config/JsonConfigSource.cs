@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -95,9 +95,9 @@ namespace Nethermind.Config
             ApplyConfigValues(moduleName, itemsDict);
         }
 
-        Dictionary<string, Dictionary<string, string>> _values = new Dictionary<string, Dictionary<string, string>>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly Dictionary<string, Dictionary<string, string>> _values = new Dictionary<string, Dictionary<string, string>>(StringComparer.InvariantCultureIgnoreCase);
 
-        Dictionary<string, Dictionary<string, object>> _parsedValues = new Dictionary<string, Dictionary<string, object>>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly Dictionary<string, Dictionary<string, object>> _parsedValues = new Dictionary<string, Dictionary<string, object>>(StringComparer.InvariantCultureIgnoreCase);
 
         private void ApplyConfigValues(string configModule, Dictionary<string, string> items)
         {

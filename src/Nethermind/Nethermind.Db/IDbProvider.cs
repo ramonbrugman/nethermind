@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+// Copyright (c) 2020 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -15,41 +15,43 @@
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
 
 namespace Nethermind.Db
 {
-    public interface IReadOnlyDbProvider : IDbProvider
+    public enum DbModeHint
     {
-        void ClearTempChanges();
+        Mem,
+        Persisted
     }
-    
+
     public interface IDbProvider : IDisposable
     {
-        ISnapshotableDb StateDb { get; }
-        ISnapshotableDb CodeDb { get; }
-        IColumnsDb<ReceiptsColumns> ReceiptsDb { get; }
-        IDb BlocksDb { get; }
-        IDb HeadersDb { get; }
-        IDb BlockInfosDb { get; }
-        
+        DbModeHint DbMode { get; }
+        public IDb StateDb => GetDb<IDb>(DbNames.State);
+        public IDb CodeDb => GetDb<IDb>(DbNames.Code);
+        public IColumnsDb<ReceiptsColumns> ReceiptsDb => GetDb<IColumnsDb<ReceiptsColumns>>(DbNames.Receipts);
+        public IDb BlocksDb => GetDb<IDb>(DbNames.Blocks);
+        public IDb HeadersDb => GetDb<IDb>(DbNames.Headers);
+        public IDb BlockInfosDb => GetDb<IDb>(DbNames.BlockInfos);
+
         // BloomDB progress / config (does not contain blooms - they are kept in bloom storage)
-        IDb BloomDb { get; }
-        
+        public IDb BloomDb => GetDb<IDb>(DbNames.Bloom);
+
         // deleted on startup and built from empty each time
-        IDb PendingTxsDb { get; }
-        
+        public IDb PendingTxsDb => GetDb<IDb>(DbNames.PendingTxs);
+
         // LES (ignore)
-        IDb ChtDb { get; }
+        public IDb ChtDb => GetDb<IDb>(DbNames.CHT);
         
         // Beam Sync (StateDB like)
-        IDb BeamStateDb { get; }
-        
-        // NDM
-        IDb ConfigsDb { get; }
-        IDb EthRequestsDb { get; }
+        IDb? BeamTempDb { get; }
+        IDb WitnessDb => GetDb<IDb>(DbNames.Witness);
 
-        // Baseline
-        IDb BaselineTreeDb { get; }
-        IDb BaselineTreeMetadataDb { get; }
+        T GetDb<T>(string dbName) where T : class, IDb;
+
+        void RegisterDb<T>(string dbName, T db) where T : class, IDb;
+
+        IDictionary<string, IDb> RegisteredDbs { get; }
     }
 }

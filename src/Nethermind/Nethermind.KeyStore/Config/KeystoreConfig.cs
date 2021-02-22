@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -52,6 +52,10 @@ namespace Nethermind.KeyStore.Config
         
         public string BlockAuthorAccount { get; set; }
         
+        public string EnodeAccount { get; set; }
+        
+        public string EnodeKeyFile { get; set; }
+
         public string[] Passwords { get; set; } = Array.Empty<string>();
         
         public string[] PasswordFiles { get; set; } = Array.Empty<string>();

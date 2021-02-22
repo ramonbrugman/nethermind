@@ -19,11 +19,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Nethermind.Core.Crypto;
+using Nethermind.DataMarketplace.Consumers.Deposits;
 using Nethermind.DataMarketplace.Consumers.Deposits.Domain;
 using Nethermind.DataMarketplace.Consumers.Deposits.Queries;
 using Nethermind.DataMarketplace.Consumers.Deposits.Repositories;
 using Nethermind.DataMarketplace.Core;
 using Nethermind.DataMarketplace.Core.Domain;
+using Nethermind.DataMarketplace.Infrastructure.Rlp;
 using Nethermind.Db;
 using Nethermind.Serialization.Rlp;
 
@@ -32,12 +34,14 @@ namespace Nethermind.DataMarketplace.Consumers.Infrastructure.Persistence.Rocks.
     public class DepositDetailsRocksRepository : IDepositDetailsRepository
     {
         private readonly IDb _database;
-        private readonly IRlpDecoder<DepositDetails> _rlpDecoder;
+        private readonly IRlpNdmDecoder<DepositDetails> _rlpDecoder;
+        private readonly IDepositUnitsCalculator _depositUnitsCalculator;
 
-        public DepositDetailsRocksRepository(IDb database, IRlpDecoder<DepositDetails> rlpDecoder)
+        public DepositDetailsRocksRepository(IDb database, IRlpNdmDecoder<DepositDetails> rlpDecoder, IDepositUnitsCalculator depositUnitsCalculator)
         {
             _database = database;
             _rlpDecoder = rlpDecoder;
+            _depositUnitsCalculator = depositUnitsCalculator;
         }
 
         public async Task<DepositDetails?> GetAsync(Keccak id)
@@ -53,7 +57,7 @@ namespace Nethermind.DataMarketplace.Consumers.Infrastructure.Persistence.Rocks.
             return Decode(bytes);
         }
 
-        public Task<PagedResult<DepositDetails>> BrowseAsync(GetDeposits query)
+        public async Task<PagedResult<DepositDetails>> BrowseAsync(GetDeposits query)
         {
             if (query is null)
             {
@@ -63,7 +67,7 @@ namespace Nethermind.DataMarketplace.Consumers.Infrastructure.Persistence.Rocks.
             var depositsBytes = _database.GetAllValues().ToArray();
             if (depositsBytes.Length == 0)
             {
-                return Task.FromResult(PagedResult<DepositDetails>.Empty);
+                return PagedResult<DepositDetails>.Empty;
             }
 
             DepositDetails[] deposits = new DepositDetails[depositsBytes.Length];
@@ -76,9 +80,9 @@ namespace Nethermind.DataMarketplace.Consumers.Infrastructure.Persistence.Rocks.
             if (query.OnlyPending)
             {
                 filteredDeposits = filteredDeposits.Where(d => !d.Rejected && !d.RefundClaimed &&
-                                                               d.Transaction?.State == TransactionState.Pending ||
+                                                               (d.Transaction?.State == TransactionState.Pending ||
                                                                d.ClaimedRefundTransaction?.State ==
-                                                               TransactionState.Pending);
+                                                               TransactionState.Pending));
             }
 
             if (query.OnlyUnconfirmed)
@@ -94,12 +98,16 @@ namespace Nethermind.DataMarketplace.Consumers.Infrastructure.Persistence.Rocks.
 
             if (query.EligibleToRefund)
             {
-                filteredDeposits = filteredDeposits.Where(d => !d.RefundClaimed &&
-                                                               (!(d.EarlyRefundTicket is null) ||
-                                                                query.CurrentBlockTimestamp >= d.Deposit.ExpiryTime));
+                foreach (var deposit in deposits)
+                {
+                    uint consumedUnits = await _depositUnitsCalculator.GetConsumedAsync(deposit);
+                    deposit.SetConsumedUnits(consumedUnits);
+                }
+                
+                filteredDeposits = GetEligibleToRefund(filteredDeposits, query.CurrentBlockTimestamp);
             }
 
-            return Task.FromResult(filteredDeposits.OrderByDescending(d => d.Timestamp).ToArray().Paginate(query));
+            return filteredDeposits.OrderByDescending(d => d.Timestamp).ToArray().Paginate(query);
         }
 
         public Task AddAsync(DepositDetails deposit) => AddOrUpdateAsync(deposit);
@@ -116,5 +124,29 @@ namespace Nethermind.DataMarketplace.Consumers.Infrastructure.Persistence.Rocks.
 
         private DepositDetails Decode(byte[] bytes)
             => _rlpDecoder.Decode(bytes.AsRlpStream());
+
+        private IEnumerable<DepositDetails> GetEligibleToRefund(IEnumerable<DepositDetails> deposits, long currentTimestamp)
+        {
+            bool refundClaimed;
+            bool notConsumedAllUnits;
+            bool isTimeType;
+            bool hasEarlyTicket;
+            bool isExpired;
+
+            foreach(var deposit in deposits)
+            {
+                refundClaimed = deposit.RefundClaimed;
+                notConsumedAllUnits = deposit.ConsumedUnits < deposit.Deposit.Units;
+                isTimeType = deposit.DataAsset.UnitType == DataAssetUnitType.Time; 
+                hasEarlyTicket = !(deposit.EarlyRefundTicket is null);
+                isExpired = currentTimestamp >= deposit.Deposit.ExpiryTime;
+
+                // in time deposits, during the refund: units consumed will be always equal to all deposit units, hence we do not check whether all units are consumed
+                if(!refundClaimed && (notConsumedAllUnits || isTimeType) && (hasEarlyTicket || isExpired))
+                {
+                    yield return deposit;
+                }
+            }
+        }
     }
 }

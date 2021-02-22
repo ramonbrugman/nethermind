@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@ namespace Nethermind.Blockchain.Receipts
         private readonly IEthereumEcdsa _ecdsa;
         private readonly ISpecProvider _specProvider;
 
-        public ReceiptsRecovery(IEthereumEcdsa ecdsa, ISpecProvider specProvider)
+        public ReceiptsRecovery(IEthereumEcdsa? ecdsa, ISpecProvider? specProvider)
         {
             _ecdsa = ecdsa ?? throw new ArgumentNullException(nameof(ecdsa));
             _specProvider = specProvider ?? throw new ArgumentNullException(nameof(specProvider));

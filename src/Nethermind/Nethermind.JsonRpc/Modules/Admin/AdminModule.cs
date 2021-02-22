@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -15,6 +15,7 @@
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Nethermind.Blockchain;
@@ -34,6 +35,8 @@ namespace Nethermind.JsonRpc.Modules.Admin
         private readonly IStaticNodesManager _staticNodesManager;
         private readonly IEnode _enode;
         private readonly string _dataDir;
+        
+        [NotNull]
         private NodeInfo _nodeInfo;
 
         public AdminModule(

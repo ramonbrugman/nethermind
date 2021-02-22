@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -48,9 +48,9 @@ namespace Nethermind.Network.Rlpx.Handshake
         public AckEip8Message Deserialize(byte[] bytes)
         {
             RlpStream rlpStream = bytes.AsRlpStream();
-            AckEip8Message authEip8Message = new AckEip8Message();
+            AckEip8Message authEip8Message = new();
             rlpStream.ReadSequenceLength();
-            authEip8Message.EphemeralPublicKey = new PublicKey(rlpStream.DecodeByteArray());
+            authEip8Message.EphemeralPublicKey = new PublicKey(rlpStream.DecodeByteArraySpan());
             authEip8Message.Nonce = rlpStream.DecodeByteArray();
             return authEip8Message;
         }

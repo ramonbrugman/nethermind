@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ namespace Nethermind.Specs.ChainSpecStyle.Json
 {
     internal class AllocationJson
     {
-        public object BuiltIn { get; set; }
+        public BuiltInJson BuiltIn { get; set; }
         
         public UInt256 Balance { get; set; }
         
@@ -34,10 +34,7 @@ namespace Nethermind.Specs.ChainSpecStyle.Json
 
         public Dictionary<UInt256, byte[]> GetConvertedStorage()
         {
-            if(Storage == null)
-                return null;
-            
-            return Storage.ToDictionary(s => Bytes.FromHexString(s.Key).ToUInt256(), s => Bytes.FromHexString(s.Value));
+            return Storage?.ToDictionary(s => Bytes.FromHexString(s.Key).ToUInt256(), s => Bytes.FromHexString(s.Value));
         }
     }
 }

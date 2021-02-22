@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -33,7 +33,7 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
                 forkIdSequenceLength = Rlp.LengthOfSequence(forkIdContentLength);
             }
 
-            NettyRlpStream rlpStream = new NettyRlpStream(byteBuffer);
+            NettyRlpStream rlpStream = new(byteBuffer);
             int contentLength =
                 Rlp.LengthOf(message.ProtocolVersion) +
                 Rlp.LengthOf(message.ChainId) +
@@ -79,7 +79,7 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
                 rlpStream.ReadSequenceLength();
                 byte[] forkHash = rlpStream.DecodeByteArray();
                 long next = (long)rlpStream.DecodeUlong();
-                ForkId forkId = new ForkId(forkHash, next);
+                ForkId forkId = new(forkHash, next);
                 statusMessage.ForkId = forkId;
             }
             

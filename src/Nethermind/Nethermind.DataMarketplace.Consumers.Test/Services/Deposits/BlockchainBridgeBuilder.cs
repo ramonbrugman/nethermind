@@ -19,17 +19,19 @@ using Nethermind.Blockchain.Filters;
 using Nethermind.Blockchain.Find;
 using Nethermind.Blockchain.Processing;
 using Nethermind.Blockchain.Receipts;
+using Nethermind.Blockchain.Spec;
+using Nethermind.Blockchain.Validators;
 using Nethermind.Core;
 using Nethermind.Core.Test.Builders;
 using Nethermind.Crypto;
 using Nethermind.DataMarketplace.Core.Services;
 using Nethermind.Db;
 using Nethermind.Db.Blooms;
-using Nethermind.Evm;
 using Nethermind.Facade;
 using Nethermind.Logging;
 using Nethermind.Specs;
 using Nethermind.State;
+using Nethermind.Trie.Pruning;
 using Nethermind.TxPool;
 using Nethermind.TxPool.Storages;
 using Nethermind.Wallet;
@@ -41,20 +43,25 @@ namespace Nethermind.DataMarketplace.Consumers.Test.Services.Deposits
     {
         public static INdmBlockchainBridge BuildABridge()
         {
-            MemDbProvider memDbProvider = new MemDbProvider();
-            StateReader stateReader = new StateReader(memDbProvider.StateDb, memDbProvider.CodeDb, LimboLogs.Instance);
-            StateProvider stateProvider = new StateProvider(memDbProvider.StateDb, memDbProvider.CodeDb, LimboLogs.Instance);
+            IDbProvider memDbProvider = TestMemDbProvider.Init();
+            StateReader stateReader = new StateReader(
+                new TrieStore(memDbProvider.StateDb, LimboLogs.Instance), memDbProvider.CodeDb, LimboLogs.Instance);
+            var trieStore = new TrieStore(memDbProvider.StateDb, LimboLogs.Instance);
+            StateProvider stateProvider = new StateProvider(trieStore, memDbProvider.CodeDb, LimboLogs.Instance);
             IEthereumEcdsa ecdsa = new EthereumEcdsa(ChainId.Mainnet, LimboLogs.Instance);
-            ITxPool txPool = new TxPool.TxPool(new InMemoryTxStorage(), ecdsa, MainnetSpecProvider.Instance, new TxPoolConfig(), stateProvider, LimboLogs.Instance);
             BlockTree blockTree = Build.A.BlockTree().OfChainLength(1).TestObject;
+            MainnetSpecProvider specProvider = MainnetSpecProvider.Instance;
+            ITxPool txPool = new TxPool.TxPool(new InMemoryTxStorage(), ecdsa, new ChainHeadSpecProvider(specProvider, blockTree),
+                new TxPoolConfig(), stateProvider, new TxValidator(specProvider.ChainId), LimboLogs.Instance);
             IWallet wallet = new DevWallet(new WalletConfig(), LimboLogs.Instance);
-            ReceiptsRecovery receiptsRecovery = new ReceiptsRecovery(ecdsa, MainnetSpecProvider.Instance);
+            ReceiptsRecovery receiptsRecovery = new ReceiptsRecovery(ecdsa, specProvider);
             LogFinder logFinder = new LogFinder(blockTree, new InMemoryReceiptStorage(), NullBloomStorage.Instance, LimboLogs.Instance, receiptsRecovery, 1024);
 
             ReadOnlyTxProcessingEnv processingEnv = new ReadOnlyTxProcessingEnv(
                 new ReadOnlyDbProvider(memDbProvider, false),
+                new TrieStore(memDbProvider.StateDb, LimboLogs.Instance),
                 new ReadOnlyBlockTree(blockTree),
-                MainnetSpecProvider.Instance, LimboLogs.Instance);
+                specProvider, LimboLogs.Instance);
             BlockchainBridge blockchainBridge = new BlockchainBridge(
                 processingEnv,
                 txPool,

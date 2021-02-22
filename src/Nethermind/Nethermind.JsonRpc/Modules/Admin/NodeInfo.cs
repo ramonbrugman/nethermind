@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -57,7 +57,7 @@ namespace Nethermind.JsonRpc.Modules.Admin
         public string Id { get; set; }
 
         [JsonProperty("ip", Order = 2)]
-        public string Ip { get; set; }
+        public string? Ip { get; set; }
 
         [JsonProperty("listenAddr", Order = 3)]
         public string ListenAddress { get; set; }

@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -15,22 +15,24 @@
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 // 
 
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 
 namespace Nethermind.Crypto
 {
     public abstract partial class ProtectedData
     {
+        [SupportedOSPlatform("windows")]
         private sealed class DpapiWrapper : IProtector
         {
-            public byte[] Protect(byte[] userData, byte[] optionalEntropy, DataProtectionScope scope)
+            public byte[] Protect(byte[] userData, byte[] optionalEntropy)
             {
-                return  System.Security.Cryptography.ProtectedData.Protect(userData, optionalEntropy, scope);
+                return  System.Security.Cryptography.ProtectedData.Protect(userData, optionalEntropy, DataProtectionScope.CurrentUser);
             }
 
-            public byte[] Unprotect(byte[] encryptedData, byte[] optionalEntropy, DataProtectionScope scope)
+            public byte[] Unprotect(byte[] encryptedData, byte[] optionalEntropy)
             {
-                return  System.Security.Cryptography.ProtectedData.Unprotect(encryptedData, optionalEntropy, scope);
+                return  System.Security.Cryptography.ProtectedData.Unprotect(encryptedData, optionalEntropy, DataProtectionScope.CurrentUser);
             }
         }
     }

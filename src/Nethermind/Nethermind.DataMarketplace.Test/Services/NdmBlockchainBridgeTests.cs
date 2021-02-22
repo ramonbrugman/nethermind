@@ -161,7 +161,7 @@ namespace Nethermind.DataMarketplace.Test.Services
         [Test]
         public async Task get_network_id_should_invoke_blockchain_bridge_get_network_id()
         {
-            const int networkId = 1;
+            const ulong networkId = 1;
             _blockchainBridge.GetChainId().Returns(networkId);
             var result = await _ndmBridge.GetNetworkIdAsync();
             _blockchainBridge.Received().GetChainId();
@@ -215,7 +215,7 @@ namespace Nethermind.DataMarketplace.Test.Services
             var hash = TestItem.KeccakA;
             _txSender.SendTransaction(transaction, TxHandlingOptions.PersistentBroadcast | TxHandlingOptions.ManagedNonce).Returns(hash);
             var result = await _ndmBridge.SendOwnTransactionAsync(transaction);
-            _txSender.Received().SendTransaction(transaction, TxHandlingOptions.PersistentBroadcast | TxHandlingOptions.ManagedNonce);
+            await _txSender.Received().SendTransaction(transaction, TxHandlingOptions.PersistentBroadcast | TxHandlingOptions.ManagedNonce);
             result.Should().Be(hash);
         }
     }

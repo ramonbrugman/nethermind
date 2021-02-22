@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -23,22 +23,23 @@ using RocksDbSharp;
 
 namespace Nethermind.Db.Rocks
 {
-    public abstract class ColumnsDb<T> : DbOnTheRocks, IColumnsDb<T>
+    public abstract class ColumnsDb<T> : DbOnTheRocks, IColumnsDb<T> where T : notnull
     {
         private readonly IDictionary<T, IDbWithSpan> _columnDbs = new Dictionary<T, IDbWithSpan>();
         
-        protected ColumnsDb(string basePath, string dbPath, IDbConfig dbConfig, ILogManager logManager, string name, params T[] keys) : base(basePath, dbPath, dbConfig, logManager, GetColumnFamilies(dbConfig, name, GetEnumKeys(keys)))
+        protected ColumnsDb(string basePath, RocksDbSettings settings, IDbConfig dbConfig, ILogManager logManager, params T[] keys) 
+            : base(basePath, settings, dbConfig, logManager, GetColumnFamilies(dbConfig, settings.DbName, GetEnumKeys(keys)))
         {
-            Name = name;
+            Name = settings.DbName;
             keys = GetEnumKeys(keys);
 
-            foreach (var key in keys)
+            foreach (T key in keys)
             {
-                _columnDbs[key] = new ColumnDb(Db, this, key.ToString()); 
+                _columnDbs[key] = new ColumnDb(Db, this, key.ToString()!); 
             }
         }
 
-        public override string Name { get; }
+        public override string Name { get; protected set; }
 
         private static T[] GetEnumKeys(T[] keys)
         {
@@ -54,11 +55,11 @@ namespace Nethermind.Db.Rocks
         {
             InitCache(dbConfig);
             
-            var result = new ColumnFamilies();
-            var blockCacheSize = ReadConfig<ulong>(dbConfig, nameof(dbConfig.BlockCacheSize), name);
-            foreach (var key in keys)
+            ColumnFamilies result = new();
+            ulong blockCacheSize = ReadConfig<ulong>(dbConfig, nameof(dbConfig.BlockCacheSize), name);
+            foreach (T key in keys)
             {
-                var columnFamilyOptions = new ColumnFamilyOptions();
+                ColumnFamilyOptions columnFamilyOptions = new();
                 columnFamilyOptions.OptimizeForPointLookup(blockCacheSize);
                 columnFamilyOptions.SetBlockBasedTableFactory(
                     new BlockBasedTableOptions()
@@ -79,5 +80,10 @@ namespace Nethermind.Db.Rocks
         public IDbWithSpan GetColumnDb(T key) => _columnDbs[key];
 
         public IEnumerable<T> ColumnKeys => _columnDbs.Keys;
+
+        public IReadOnlyDb CreateReadOnly(bool createInMemWriteStore)
+        {
+            return new ReadOnlyColumnsDb<T>(this, createInMemWriteStore);
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ namespace Nethermind.Crypto
     public interface IEthereumEcdsa : IEcdsa
     {
         void Sign(PrivateKey privateKey, Transaction tx, bool isEip155Enabled = true);
-        Address RecoverAddress(Transaction tx, bool useTxChainId = false);
+        Address RecoverAddress(Transaction tx, bool useSignatureChainId = false);
         Address RecoverAddress(Signature signature, Keccak message);
         Address RecoverAddress(Span<byte> signatureBytes, Keccak message);
         bool Verify(Address sender, Transaction tx);

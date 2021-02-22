@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -38,7 +38,7 @@ namespace Nethermind.Network.Test
         [SetUp]
         public void Setup()
         {
-            var path = "test-static-nodes.json";
+            var path = Path.Combine(TestContext.CurrentContext.WorkDirectory, "test-static-nodes.json");
             var logManager = LimboLogs.Instance;
             _staticNodesManager = new StaticNodesManager(path, logManager);
         }
@@ -59,6 +59,14 @@ namespace Nethermind.Network.Test
             await _staticNodesManager.AddAsync(Enode, false);
             _staticNodesManager.Nodes.Count().Should().Be(1);
             eventRaised.Should().BeTrue();
+        }
+        
+        [Test]
+        public async Task is_static_should_report_correctly()
+        {
+            _staticNodesManager.IsStatic(Enode).Should().BeFalse();
+            await _staticNodesManager.AddAsync(Enode, false);
+            _staticNodesManager.IsStatic(Enode).Should().BeTrue();
         }
 
         [Test]

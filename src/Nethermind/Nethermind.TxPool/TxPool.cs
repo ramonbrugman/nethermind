@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -20,10 +20,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Timers;
 using Nethermind.Core;
 using Nethermind.Core.Caching;
 using Nethermind.Core.Crypto;
+using Nethermind.Core.Extensions;
 using Nethermind.Core.Specs;
 using Nethermind.Crypto;
 using Nethermind.Int256;
@@ -42,17 +44,19 @@ namespace Nethermind.TxPool
     /// </summary>
     public class TxPool : ITxPool, IDisposable
     {
-        public static IComparer<Transaction> DefaultComparer { get; } = 
+        public static IComparer<Transaction> DefaultComparer { get; } =
             CompareTxByGasPrice.Instance
                 .ThenBy(CompareTxByTimestamp.Instance)
                 .ThenBy(CompareTxByPoolIndex.Instance)
                 .ThenBy(CompareTxByGasLimit.Instance);
-        
+
         private readonly object _locker = new object();
 
-        private readonly ConcurrentDictionary<Address, AddressNonces> _nonces = new ConcurrentDictionary<Address, AddressNonces>();
+        private readonly ConcurrentDictionary<Address, AddressNonces> _nonces =
+            new ConcurrentDictionary<Address, AddressNonces>();
 
-        private readonly LruKeyCache<Keccak> _hashCache = new LruKeyCache<Keccak>(MemoryAllowance.TxHashCacheSize, MemoryAllowance.TxHashCacheSize, "tx hashes");
+        private readonly LruKeyCache<Keccak> _hashCache = new LruKeyCache<Keccak>(MemoryAllowance.TxHashCacheSize,
+            Math.Min(1024 * 16, MemoryAllowance.TxHashCacheSize), "tx hashes");
 
         /// <summary>
         /// Number of blocks after which own transaction will not be resurrected any more
@@ -72,15 +76,17 @@ namespace Nethermind.TxPool
 
         private readonly SortedPool<Keccak, Transaction, Address> _transactions;
 
-        private readonly ISpecProvider _specProvider;
+        private readonly IChainHeadSpecProvider _specProvider;
         private readonly IReadOnlyStateProvider _stateProvider;
+        private readonly ITxValidator _validator;
         private readonly IEthereumEcdsa _ecdsa;
         protected readonly ILogger _logger;
 
         /// <summary>
         /// Transactions published locally (initiated by this node users).
         /// </summary>
-        private readonly ConcurrentDictionary<Keccak, Transaction> _ownTransactions = new ConcurrentDictionary<Keccak, Transaction>();
+        private readonly ConcurrentDictionary<Keccak, Transaction> _ownTransactions =
+            new ConcurrentDictionary<Keccak, Transaction>();
 
         /// <summary>
         /// Own transactions that were already added to the chain but need more confirmations
@@ -88,7 +94,7 @@ namespace Nethermind.TxPool
         /// </summary>
         private readonly ConcurrentDictionary<Keccak, (Transaction tx, long blockNumber)> _fadingOwnTransactions
             = new ConcurrentDictionary<Keccak, (Transaction tx, long blockNumber)>();
-        
+
         /// <summary>
         /// Long term storage for pending transactions.
         /// </summary>
@@ -97,7 +103,8 @@ namespace Nethermind.TxPool
         /// <summary>
         /// Connected peers that can be notified about transactions.
         /// </summary>
-        private readonly ConcurrentDictionary<PublicKey, ITxPoolPeer> _peers = new ConcurrentDictionary<PublicKey, ITxPoolPeer>();
+        private readonly ConcurrentDictionary<PublicKey, ITxPoolPeer> _peers =
+            new ConcurrentDictionary<PublicKey, ITxPoolPeer>();
 
         /// <summary>
         /// Timer for rebroadcasting pending own transactions.
@@ -123,13 +130,15 @@ namespace Nethermind.TxPool
         /// <param name="specProvider">Used for retrieving information on EIPs that may affect tx signature scheme.</param>
         /// <param name="txPoolConfig"></param>
         /// <param name="stateProvider"></param>
+        /// <param name="validator"></param>
         /// <param name="logManager"></param>
         /// <param name="comparer"></param>
         public TxPool(ITxStorage txStorage,
             IEthereumEcdsa ecdsa,
-            ISpecProvider specProvider,
+            IChainHeadSpecProvider specProvider,
             ITxPoolConfig txPoolConfig,
             IReadOnlyStateProvider stateProvider,
+            ITxValidator validator,
             ILogManager logManager,
             IComparer<Transaction> comparer = null)
         {
@@ -138,12 +147,15 @@ namespace Nethermind.TxPool
             _txStorage = txStorage ?? throw new ArgumentNullException(nameof(txStorage));
             _specProvider = specProvider ?? throw new ArgumentNullException(nameof(specProvider));
             _stateProvider = stateProvider ?? throw new ArgumentNullException(nameof(stateProvider));
+            _validator = validator ?? throw new ArgumentNullException(nameof(validator));
 
             MemoryAllowance.MemPoolSize = txPoolConfig.Size;
-            ThisNodeInfo.AddInfo("Mem est tx   :", $"{(LruCache<Keccak, object>.CalculateMemorySize(32, MemoryAllowance.TxHashCacheSize) + LruCache<Keccak, Transaction>.CalculateMemorySize(4096, MemoryAllowance.MemPoolSize)) / 1000 / 1000}MB".PadLeft(8));
+            ThisNodeInfo.AddInfo("Mem est tx   :",
+                $"{(LruCache<Keccak, object>.CalculateMemorySize(32, MemoryAllowance.TxHashCacheSize) + LruCache<Keccak, Transaction>.CalculateMemorySize(4096, MemoryAllowance.MemPoolSize)) / 1000 / 1000}MB"
+                    .PadLeft(8));
 
-            _transactions = new TxDistinctSortedPool(MemoryAllowance.MemPoolSize, logManager, comparer ?? DefaultComparer);
-            
+            _transactions =
+                new TxDistinctSortedPool(MemoryAllowance.MemPoolSize, logManager, comparer ?? DefaultComparer);
             _peerNotificationThreshold = txPoolConfig.PeerNotificationThreshold;
 
             _ownTimer = new Timer(500);
@@ -153,8 +165,9 @@ namespace Nethermind.TxPool
         }
 
         public Transaction[] GetPendingTransactions() => _transactions.GetSnapshot();
-        
-        public IDictionary<Address, Transaction[]> GetPendingTransactionsBySender() => _transactions.GetBucketSnapshot();
+
+        public IDictionary<Address, Transaction[]> GetPendingTransactionsBySender() =>
+            _transactions.GetBucketSnapshot();
 
         public Transaction[] GetOwnPendingTransactions() => _ownTransactions.Values.ToArray();
 
@@ -180,16 +193,19 @@ namespace Nethermind.TxPool
 
         public AddTxResult AddTransaction(Transaction tx, TxHandlingOptions handlingOptions)
         {
-            if (tx.Hash == null)
+            if (tx.Hash is null)
             {
                 throw new ArgumentException($"{nameof(tx.Hash)} not set on {nameof(Transaction)}");
             }
-            
+
             NewDiscovered?.Invoke(this, new TxEventArgs(tx));
-            
+
             bool managedNonce = (handlingOptions & TxHandlingOptions.ManagedNonce) == TxHandlingOptions.ManagedNonce;
-            bool isPersistentBroadcast = (handlingOptions & TxHandlingOptions.PersistentBroadcast) == TxHandlingOptions.PersistentBroadcast;
-            if (_logger.IsTrace) _logger.Trace($"Adding transaction {tx.ToString("  ")} - managed nonce: {managedNonce} | persistent broadcast {isPersistentBroadcast}");
+            bool isPersistentBroadcast = (handlingOptions & TxHandlingOptions.PersistentBroadcast) ==
+                                         TxHandlingOptions.PersistentBroadcast;
+            if (_logger.IsTrace)
+                _logger.Trace(
+                    $"Adding transaction {tx.ToString("  ")} - managed nonce: {managedNonce} | persistent broadcast {isPersistentBroadcast}");
 
             return FilterTransaction(tx, managedNonce) ?? AddCore(tx, isPersistentBroadcast);
         }
@@ -245,19 +261,19 @@ namespace Nethermind.TxPool
 
             Metrics.PendingTransactionsReceived++;
 
-//            if (tx.Signature.ChainId == null)
-//            {
-//                // Note that we are discarding here any transactions that follow the old signature scheme (no ChainId).
-//                Metrics.PendingTransactionsDiscarded++;
-//                return AddTxResult.OldScheme;
-//            }
+            //            if (tx.Signature.ChainId == null)
+            //            {
+            //                // Note that we are discarding here any transactions that follow the old signature scheme (no ChainId).
+            //                Metrics.PendingTransactionsDiscarded++;
+            //                return AddTxResult.OldScheme;
+            //            }
 
-            if (tx.Signature.ChainId != null && tx.Signature.ChainId != _specProvider.ChainId)
+            if (!_validator.IsWellFormed(tx, _specProvider.GetSpec()))
             {
-                // It may happen that other nodes send us transactions that were signed for another chain.
+                // It may happen that other nodes send us transactions that were signed for another chain or don't have enough gas.
                 Metrics.PendingTransactionsDiscarded++;
-                if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToString("  ")}, wrong chain.");
-                return AddTxResult.InvalidChainId;
+                if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToString("  ")}, invalid transaction.");
+                return AddTxResult.Invalid;
             }
 
             /* Note that here we should also test incoming transactions for old nonce.
@@ -267,7 +283,8 @@ namespace Nethermind.TxPool
 
             if (managedNonce && CheckOwnTransactionAlreadyUsed(tx))
             {
-                if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToString("  ")}, nonce already used.");
+                if (_logger.IsTrace)
+                    _logger.Trace($"Skipped adding transaction {tx.ToString("  ")}, nonce already used.");
                 return AddTxResult.OwnNonceAlreadyUsed;
             }
 
@@ -275,10 +292,10 @@ namespace Nethermind.TxPool
              * We need to investigate what these txs are and why the sender address is resolved to null.
              * Then we need to decide whether we really want to broadcast them.
              */
-            if (tx.SenderAddress == null)
+            if (tx.SenderAddress is null)
             {
                 tx.SenderAddress = _ecdsa.RecoverAddress(tx);
-                if (tx.SenderAddress == null)
+                if (tx.SenderAddress is null)
                 {
                     if (_logger.IsTrace) _logger.Trace($"Skipped adding transaction {tx.ToString("  ")}, no sender.");
                     return AddTxResult.PotentiallyUseless;
@@ -295,7 +312,7 @@ namespace Nethermind.TxPool
                 _ownTransactions.TryAdd(tx.Hash, tx);
                 _ownTimer.Enabled = true;
                 if (_logger.IsDebug) _logger.Debug($"Broadcasting own transaction {tx.Hash} to {_peers.Count} peers");
-                if(_logger.IsTrace) _logger.Trace($"Broadcasting transaction {tx.ToString("  ")}");
+                if (_logger.IsTrace) _logger.Trace($"Broadcasting transaction {tx.ToString("  ")}");
             }
         }
 
@@ -320,7 +337,9 @@ namespace Nethermind.TxPool
                 if (!(nonce.TransactionHash is null && nonce.TransactionHash != transaction.Hash))
                 {
                     // Nonce conflict
-                    if (_logger.IsDebug) _logger.Debug($"Nonce: {nonce.Value} was already used in transaction: '{nonce.TransactionHash}' and cannot be reused by transaction: '{transaction.Hash}'.");
+                    if (_logger.IsDebug)
+                        _logger.Debug(
+                            $"Nonce: {nonce.Value} was already used in transaction: '{nonce.TransactionHash}' and cannot be reused by transaction: '{transaction.Hash}'.");
 
                     return true;
                 }
@@ -366,10 +385,15 @@ namespace Nethermind.TxPool
                     }
                 }
             }
-            
-            if (_transactions.TryRemove(hash, out var transaction, out ICollection<Transaction> bucket))
+
+            ICollection<Transaction> bucket;
+            Transaction transaction;
+            lock (_locker)
             {
-                RemovedPending?.Invoke(this, new TxEventArgs(transaction));
+                if (_transactions.TryRemove(hash, out transaction, out bucket))
+                {
+                    RemovedPending?.Invoke(this, new TxEventArgs(transaction));
+                }
             }
 
             if (_ownTransactions.Count != 0)
@@ -378,7 +402,8 @@ namespace Nethermind.TxPool
                 if (ownIncluded)
                 {
                     _fadingOwnTransactions.TryAdd(hash, (fadingTx, blockNumber));
-                    if (_logger.IsInfo) _logger.Trace($"Transaction {hash} created on this node was included in the block");
+                    if (_logger.IsInfo)
+                        _logger.Trace($"Transaction {hash} created on this node was included in the block");
                 }
             }
 
@@ -387,11 +412,14 @@ namespace Nethermind.TxPool
 
             if (bucket != null && removeBelowThisTxNonce)
             {
-                Transaction txWithSmallestNonce = bucket.FirstOrDefault();
-                while (txWithSmallestNonce != null && txWithSmallestNonce.Nonce <= transaction.Nonce)
+                lock (_locker)
                 {
-                    RemoveTransaction(txWithSmallestNonce.Hash, blockNumber);
-                    txWithSmallestNonce = bucket.FirstOrDefault();
+                    Transaction txWithSmallestNonce = bucket.FirstOrDefault();
+                    while (txWithSmallestNonce != null && txWithSmallestNonce.Nonce <= transaction.Nonce)
+                    {
+                        RemoveTransaction(txWithSmallestNonce.Hash, blockNumber);
+                        txWithSmallestNonce = bucket.FirstOrDefault();
+                    }
                 }
             }
         }
@@ -402,15 +430,15 @@ namespace Nethermind.TxPool
             {
                 // commented out as it puts too much pressure on the database
                 // and it not really required in any scenario
-                  // * tx recovery usually will fetch from pending
-                  // * get tx via RPC usually will fetch from block or from pending
-                  // * internal tx pool scenarios are handled directly elsewhere
+                // * tx recovery usually will fetch from pending
+                // * get tx via RPC usually will fetch from block or from pending
+                // * internal tx pool scenarios are handled directly elsewhere
                 // transaction = _txStorage.Get(hash);
             }
 
             return transaction != null;
         }
-        
+
         // TODO: Ensure that nonce is always valid in case of sending own transactions from different nodes.
         public UInt256 ReserveOwnTransactionNonce(Address address)
         {
@@ -436,16 +464,26 @@ namespace Nethermind.TxPool
             _ownTimer?.Dispose();
         }
 
-        public event EventHandler<TxEventArgs> NewDiscovered;
-        public event EventHandler<TxEventArgs> NewPending;
-        public event EventHandler<TxEventArgs> RemovedPending;
+        public event EventHandler<TxEventArgs>? NewDiscovered;
+        public event EventHandler<TxEventArgs>? NewPending;
+        public event EventHandler<TxEventArgs>? RemovedPending;
 
         private void Notify(ITxPoolPeer peer, Transaction tx, bool isPriority)
         {
-            Metrics.PendingTransactionsSent++;
-            peer.SendNewTransaction(tx, isPriority);
-
-            if (_logger.IsTrace) _logger.Trace($"Notified {peer.Enode} about a transaction: {tx.Hash}");
+            Task.Run(() =>
+            {
+                peer.SendNewTransaction(tx, isPriority);
+                Metrics.PendingTransactionsSent++;
+                if (_logger.IsTrace) _logger.Trace($"Notified {peer.Enode} about a transaction: {tx.Hash}");
+            }).ContinueWith(
+                t =>
+                    t.Exception?.Handle(ex =>
+                    {
+                        _logger.Error($"Failed to notify {peer.Enode} about a transaction: {tx.Hash}", ex);
+                        return true;
+                    })
+                , TaskContinuationOptions.OnlyOnFaulted
+            );
         }
 
         private void NotifyAllPeers(Transaction tx)

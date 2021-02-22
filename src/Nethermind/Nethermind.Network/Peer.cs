@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -46,12 +46,12 @@ namespace Nethermind.Network
         /// <summary>
         /// An incoming session to the Node which can be in one of many states.
         /// </summary>
-        public ISession InSession { get; set; }
+        public ISession? InSession { get; set; }
         
         /// <summary>
         /// An outgoing session to the Node which can be in one of many states.
         /// </summary>
-        public ISession OutSession { get; set; }
+        public ISession? OutSession { get; set; }
 
         public override string ToString()
         {

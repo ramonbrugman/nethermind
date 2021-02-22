@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -30,23 +30,28 @@ namespace Nethermind.Network.P2P
 {
     public class Session : ISession
     {
-        private static ConcurrentDictionary<string, AdaptiveCodeResolver> _resolvers = new ConcurrentDictionary<string, AdaptiveCodeResolver>();
+        private static readonly ConcurrentDictionary<string, AdaptiveCodeResolver> _resolvers = new();
+        private readonly ConcurrentDictionary<string, IProtocolHandler> _protocols = new();
+        
+        private readonly ILogger _logger;
+        private readonly ILogManager _logManager;
 
-        private ILogger _logger;
-        private ILogManager _logManager;
+        private Node? _node;
+        private readonly IChannel _channel;
+        private readonly IDisconnectsAnalyzer _disconnectsAnalyzer;
+        private IChannelHandlerContext? _context;
 
-        private Node _node;
-        private IChannel _channel;
-        private IChannelHandlerContext _context;
-
-        private Dictionary<string, IProtocolHandler> _protocols = new Dictionary<string, IProtocolHandler>();
-
-        public Session(int localPort, ILogManager logManager, IChannel channel)
+        public Session(
+            int localPort,
+            IChannel channel,
+            IDisconnectsAnalyzer disconnectsAnalyzer,
+            ILogManager logManager)
         {
             Direction = ConnectionDirection.In;
             State = SessionState.New;
             _logManager = logManager ?? throw new ArgumentNullException(nameof(logManager));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+            _disconnectsAnalyzer = disconnectsAnalyzer;
             _logger = logManager.GetClassLogger<Session>();
             RemoteNodeId = null;
             LocalPort = localPort;
@@ -55,18 +60,20 @@ namespace Nethermind.Network.P2P
 
         public Session(
             int localPort,
-            ILogManager logManager,
+            Node remoteNode,
             IChannel channel,
-            Node node)
+            IDisconnectsAnalyzer disconnectsAnalyzer,
+            ILogManager logManager)
         {
             State = SessionState.New;
-            _node = node ?? throw new ArgumentNullException(nameof(node));
+            _node = remoteNode ?? throw new ArgumentNullException(nameof(remoteNode));
             _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+            _disconnectsAnalyzer = disconnectsAnalyzer;
             _logManager = logManager ?? throw new ArgumentNullException(nameof(logManager));
             _logger = logManager.GetClassLogger<Session>();
-            RemoteNodeId = node.Id;
-            RemoteHost = node.Host;
-            RemotePort = node.Port;
+            RemoteNodeId = remoteNode.Id;
+            RemoteHost = remoteNode.Host;
+            RemotePort = remoteNode.Port;
             LocalPort = localPort;
             SessionId = Guid.NewGuid();
             Direction = ConnectionDirection.Out;
@@ -135,17 +142,21 @@ namespace Nethermind.Network.P2P
             {
                 return;
             }
-
-            protocol.AddSupportedCapability(capability);
+            if (protocol is IP2PProtocolHandler p2PProtocol)
+            {
+                p2PProtocol.AddSupportedCapability(capability);
+            }
         }
 
         public bool HasAvailableCapability(Capability capability)
             => _protocols.TryGetValue(Protocol.P2P, out IProtocolHandler protocol)
-               && protocol.HasAvailableCapability(capability);
+               && protocol is IP2PProtocolHandler p2PProtocol
+               && p2PProtocol.HasAvailableCapability(capability);
 
         public bool HasAgreedCapability(Capability capability)
             => _protocols.TryGetValue(Protocol.P2P, out IProtocolHandler protocol)
-               && protocol.HasAgreedCapability(capability);
+               && protocol is IP2PProtocolHandler p2PProtocol
+               && p2PProtocol.HasAgreedCapability(capability);
 
         public IPingSender PingSender { get; set; }
 
@@ -165,7 +176,7 @@ namespace Nethermind.Network.P2P
             }
 
             int dynamicMessageCode = zeroPacket.PacketType;
-            (string protocol, int messageId) = _resolver.ResolveProtocol(zeroPacket.PacketType);
+            (string? protocol, int messageId) = _resolver.ResolveProtocol(zeroPacket.PacketType);
             zeroPacket.Protocol = protocol;
 
             if (_logger.IsTrace)
@@ -175,7 +186,7 @@ namespace Nethermind.Network.P2P
             if (protocol == null)
             {
                 if (_logger.IsTrace)
-                    _logger.Warn($"Received a message from node: {RemoteNodeId}, " + 
+                    _logger.Warn($"Received a message from node: {RemoteNodeId}, " +
                                  $"({dynamicMessageCode} => {messageId}), known protocols ({_protocols.Count}): " +
                                  $"{string.Join(", ", _protocols.Select(x => $"{x.Value.Name} {x.Value.MessageIdSpaceSize}"))}");
                 return;
@@ -248,7 +259,16 @@ namespace Nethermind.Network.P2P
             }
 
             packet.PacketType = messageId;
-            _protocols[protocol].HandleMessage(packet);
+
+            if (State < SessionState.DisconnectingProtocols)
+            {
+                _protocols[protocol].HandleMessage(packet);
+            }
+        }
+
+        public bool TryGetProtocolHandler(string protocolCode, out IProtocolHandler handler)
+        {
+            return _protocols.TryGetValue(protocolCode, out handler);
         }
 
         public void Init(byte p2PVersion, IChannelHandlerContext context, IPacketSender packetSender)
@@ -320,6 +340,35 @@ namespace Nethermind.Network.P2P
 
         public void InitiateDisconnect(DisconnectReason disconnectReason, string details = null)
         {
+            bool ShouldDisconnectStaticNode()
+            {
+                switch (disconnectReason)
+                {
+                    case DisconnectReason.DisconnectRequested:
+                    case DisconnectReason.TcpSubSystemError:
+                    case DisconnectReason.UselessPeer:
+                    case DisconnectReason.TooManyPeers:
+                    case DisconnectReason.Breach1:
+                    case DisconnectReason.Breach2:
+                    case DisconnectReason.Other:
+                        return false;
+                    case DisconnectReason.ReceiveMessageTimeout:
+                    case DisconnectReason.BreachOfProtocol:
+                    case DisconnectReason.AlreadyConnected:
+                    case DisconnectReason.IncompatibleP2PVersion:
+                    case DisconnectReason.NullNodeIdentityReceived:
+                    case DisconnectReason.ClientQuitting:
+                    case DisconnectReason.UnexpectedIdentity:
+                    case DisconnectReason.IdentitySameAsSelf:
+                    case DisconnectReason.NdmInvalidHiSignature:
+                    case DisconnectReason.NdmHostAddressesNotConfigured:
+                    case DisconnectReason.NdmPeerAddressesNotConfigured:
+                        return true;
+                    default:
+                        return true;
+                }
+            }
+
             lock (_sessionStateLock)
             {
                 if (IsClosing)
@@ -328,6 +377,12 @@ namespace Nethermind.Network.P2P
                 }
 
                 State = SessionState.DisconnectingProtocols;
+            }
+            
+            if (Node?.IsStatic == true && !ShouldDisconnectStaticNode())
+            {
+                if (_logger.IsTrace) _logger.Trace($"{this} not disconnecting for static peer on {disconnectReason} ({details})");
+                return;
             }
 
             if (_logger.IsTrace) _logger.Trace($"{this} disconnecting protocols");
@@ -384,7 +439,7 @@ namespace Nethermind.Network.P2P
                 State = SessionState.Disconnecting;
             }
 
-            DisconnectMetrics.Update(disconnectType, disconnectReason);
+            _disconnectsAnalyzer.ReportDisconnect(disconnectReason, disconnectType, details);
 
             if (NetworkDiagTracer.IsEnabled && RemoteHost != null)
                 NetworkDiagTracer.ReportDisconnect(Node.Address, $"{disconnectType} {disconnectReason} {details}");
@@ -483,7 +538,7 @@ namespace Nethermind.Network.P2P
                     $"{Protocol.P2P} handler has to be started before starting {handler.ProtocolCode} handler on {this}");
             }
 
-            _protocols.Add(handler.ProtocolCode, handler);
+            _protocols.TryAdd(handler.ProtocolCode, handler);
             _resolver = GetOrCreateResolver();
         }
 
@@ -512,7 +567,7 @@ namespace Nethermind.Network.P2P
         {
             private readonly (string ProtocolCode, int SpaceSize)[] _alphabetically;
 
-            public AdaptiveCodeResolver(Dictionary<string, IProtocolHandler> protocols)
+            public AdaptiveCodeResolver(IDictionary<string, IProtocolHandler> protocols)
             {
                 _alphabetically = new (string, int)[protocols.Count];
                 _alphabetically[0] = (Protocol.P2P, protocols[Protocol.P2P].MessageIdSpaceSize);

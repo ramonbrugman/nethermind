@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -21,6 +21,7 @@ using Nethermind.JsonRpc.Modules;
 using Nethermind.Monitoring;
 using Nethermind.Network;
 using Nethermind.Network.Discovery;
+using Nethermind.Network.P2P;
 using Nethermind.Network.Rlpx;
 using Nethermind.PubSub;
 using Nethermind.Stats;
@@ -35,6 +36,7 @@ namespace Nethermind.Api
     {
         (IApiWithNetwork GetFromApi, IApiWithNetwork SetInApi) ForNetwork => (this, this);
         
+        IDisconnectsAnalyzer? DisconnectsAnalyzer { get; set; }
         IDiscoveryApp? DiscoveryApp { get; set; }
         IGrpcServer? GrpcServer { get; set; }
         IIPResolver? IpResolver { get; set; }
@@ -52,6 +54,6 @@ namespace Nethermind.Api
         ISynchronizer? Synchronizer { get; set; }
         ISyncPeerPool? SyncPeerPool { get; set; }
         ISyncServer? SyncServer { get; set; }
-        IWebSocketsManager? WebSocketsManager { get; set; }
+        IWebSocketsManager WebSocketsManager { get; set; }
     }
 }

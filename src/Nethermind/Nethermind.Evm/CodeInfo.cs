@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections;
-using Nethermind.Core.Extensions;
 using Nethermind.Evm.Precompiles;
 
 namespace Nethermind.Evm
@@ -44,7 +43,7 @@ namespace Nethermind.Evm
 
         public bool ValidateJump(int destination, bool isSubroutine)
         {
-            if (_validJumpDestinations == null)
+            if (_validJumpDestinations is null)
             {
                 CalculateJumpDestinations();
             }

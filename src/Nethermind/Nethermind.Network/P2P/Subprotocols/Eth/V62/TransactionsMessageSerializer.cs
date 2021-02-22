@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
 {
     public class TransactionsMessageSerializer : IZeroMessageSerializer<TransactionsMessage>
     {
-        private TransactionDecoder _decoder = new TransactionDecoder();
+        private TxDecoder _decoder = new TxDecoder();
         
         public void Serialize(IByteBuffer byteBuffer, TransactionsMessage message)
         {

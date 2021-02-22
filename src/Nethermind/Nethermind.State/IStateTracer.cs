@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -21,8 +21,9 @@ namespace Nethermind.State
 {
     public interface IStateTracer
     {
+        bool IsTracingState { get; }
         void ReportBalanceChange(Address address, UInt256? before, UInt256? after);
-        void ReportCodeChange(Address address, byte[] before, byte[] after);
+        void ReportCodeChange(Address address, byte[]? before, byte[]? after);
         void ReportNonceChange(Address address, UInt256? before, UInt256? after);
         void ReportAccountRead(Address address);
     }

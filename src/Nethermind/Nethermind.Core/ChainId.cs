@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -51,42 +51,29 @@ namespace Nethermind.Core
         public const int Kovan = 42;
         public const int EthereumClassicMainnet = 61;
         public const int EthereumClassicTestnet = 62;
+        public const int EnergyWeb = 246;
         public const int DefaultGethPrivateChain = 1337;
         public const int Stureby = 314158;
 
-        public static string GetChainName(int chainId)
+        public static string GetChainName(ulong chainId)
         {
-            switch (chainId)
+            return chainId switch
             {
-                case Olympic:
-                    return "Olympic";
-                case Mainnet:
-                    return "Mainnet";
-                case Morden:
-                    return "Morden";
-                case Ropsten:
-                    return "Ropsten";
-                case Rinkeby:
-                    return "Rinkeby";
-                case Goerli:
-                    return "Goerli";
-                case RootstockMainnet:
-                    return "RootstockMainnet";
-                case RootstockTestnet:
-                    return "RootstockTestnet";
-                case Kovan:
-                    return "Kovan";
-                case EthereumClassicMainnet:
-                    return "EthereumClassicMainnet";
-                case EthereumClassicTestnet:
-                    return "EthereumClassicTestnet";
-                case DefaultGethPrivateChain:
-                    return "DefaultGethPrivateChain";
-                case Stureby:
-                    return "Stureby";
-            }
-
-            return chainId.ToString();
+                Olympic => "Olympic",
+                Mainnet => "Mainnet",
+                Morden => "Morden",
+                Ropsten => "Ropsten",
+                Rinkeby => "Rinkeby",
+                Goerli => "Goerli",
+                RootstockMainnet => "RootstockMainnet",
+                RootstockTestnet => "RootstockTestnet",
+                Kovan => "Kovan",
+                EthereumClassicMainnet => "EthereumClassicMainnet",
+                EthereumClassicTestnet => "EthereumClassicTestnet",
+                DefaultGethPrivateChain => "DefaultGethPrivateChain",
+                Stureby => "Stureby",
+                _ => chainId.ToString()
+            };
         }
     }
 }

@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@ namespace Nethermind.WebSockets
                     if (context.Request.Path.HasValue)
                     {
                         var path = context.Request.Path.Value;
-                        moduleName = path.Split("/").LastOrDefault();
+                        moduleName = path.Split("/", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
                     }
 
                     module = webSocketsManager.GetModule(moduleName);

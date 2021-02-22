@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using Nethermind.Config;
 using Nethermind.Core.Crypto;
 using Nethermind.Logging;
+using Nethermind.Stats.Model;
 using Newtonsoft.Json;
 
 namespace Nethermind.Network.StaticNodes
@@ -37,7 +38,7 @@ namespace Nethermind.Network.StaticNodes
 
         public StaticNodesManager(string staticNodesPath, ILogManager logManager)
         {
-            _staticNodesPath = staticNodesPath;
+            _staticNodesPath = staticNodesPath.GetApplicationResourcePath();
             _logger = logManager.GetClassLogger();
         }
 
@@ -117,6 +118,12 @@ namespace Nethermind.Network.StaticNodes
             }
 
             return true;
+        }
+
+        public bool IsStatic(string enode)
+        {
+            NetworkNode node = new NetworkNode(enode);
+            return _nodes.TryGetValue(node.NodeId, out NetworkNode staticNode) && string.Equals(staticNode.Host, node.Host, StringComparison.InvariantCultureIgnoreCase);
         }
 
         private Task SaveFileAsync()

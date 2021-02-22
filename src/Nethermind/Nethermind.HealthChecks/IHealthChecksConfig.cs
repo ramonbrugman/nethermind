@@ -27,6 +27,9 @@ namespace Nethermind.HealthChecks
         [ConfigItem(Description = "If 'true' then Webhooks can be configured", DefaultValue = "false")]
         public bool WebhooksEnabled { get; set; }
 
+        [ConfigItem(Description = "The URL slug on which Healthchecks service will be exposed", DefaultValue = "/health")]
+        public string Slug { get; set; }
+
         [ConfigItem(Description = "The Webhooks endpoint e.g. Slack WebHooks", DefaultValue = "null")]
         public string WebhooksUri { get; set; }
 
@@ -41,5 +44,11 @@ namespace Nethermind.HealthChecks
 
         [ConfigItem(Description = "Configures the UI to poll for healthchecks updates (in seconds)", DefaultValue = "5")]
         public int PollingInterval { get; set; }
+        
+        [ConfigItem(Description = "Max interval in seconds in which we assume that node processing blocks in a healthy way", DefaultValue = "null")]
+        public ulong? MaxIntervalWithoutProcessedBlock { get; set; }
+        
+        [ConfigItem(Description = "Max interval in seconds in which we assume that node producing blocks in a healthy way", DefaultValue = "null")]
+        public ulong? MaxIntervalWithoutProducedBlock { get; set; }
     }
 }

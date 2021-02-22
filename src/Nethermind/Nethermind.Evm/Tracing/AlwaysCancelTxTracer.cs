@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -20,7 +20,6 @@ using System.Threading;
 using Nethermind.Core;
 using Nethermind.Core.Crypto;
 using Nethermind.Int256;
-using Nethermind.State;
 
 namespace Nethermind.Evm.Tracing
 {
@@ -51,6 +50,7 @@ namespace Nethermind.Evm.Tracing
         public bool IsTracingCode => true;
         public bool IsTracingStack => true;
         public bool IsTracingState => true;
+        public bool IsTracingStorage => true;
         public bool IsTracingBlockHash => true;
 
         public void MarkAsSuccess(Address recipient, long gasSpent, byte[] output, LogEntry[] logs, Keccak stateRoot = null) => throw new OperationCanceledException(ErrorMessage);
@@ -74,7 +74,7 @@ namespace Nethermind.Evm.Tracing
 
         public void SetOperationMemory(List<string> memoryTrace) => throw new OperationCanceledException(ErrorMessage);
 
-        public void SetOperationStorage(Address address, UInt256 storageIndex, byte[] newValue, byte[] currentValue) => throw new OperationCanceledException(ErrorMessage);
+        public void SetOperationStorage(Address address, UInt256 storageIndex, ReadOnlySpan<byte> newValue, ReadOnlySpan<byte> currentValue) => throw new OperationCanceledException(ErrorMessage);
         
         public void ReportSelfDestruct(Address address, UInt256 balance, Address refundAddress) => throw new OperationCanceledException(ErrorMessage);
 
@@ -87,6 +87,8 @@ namespace Nethermind.Evm.Tracing
         public void ReportAccountRead(Address address) => throw new OperationCanceledException(ErrorMessage);
 
         public void ReportStorageChange(StorageCell storageCell, byte[] before, byte[] after) => throw new OperationCanceledException(ErrorMessage);
+        
+        public void ReportStorageRead(StorageCell storageCell) => throw new OperationCanceledException(ErrorMessage);
 
         public void ReportAction(long gas, UInt256 value, Address @from, Address to, byte[] input, ExecutionType callType, bool isPrecompileCall = false) => throw new OperationCanceledException(ErrorMessage);
 

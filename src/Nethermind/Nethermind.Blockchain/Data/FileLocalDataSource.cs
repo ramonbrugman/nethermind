@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -18,7 +18,6 @@
 using System;
 using System.IO;
 using System.IO.Abstractions;
-using System.IO.Enumeration;
 using System.Threading.Tasks;
 using System.Timers;
 using Nethermind.Logging;

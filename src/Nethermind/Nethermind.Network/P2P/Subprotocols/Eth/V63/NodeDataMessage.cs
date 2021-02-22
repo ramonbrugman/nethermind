@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -24,11 +24,11 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V63
         public override int PacketType { get; } = Eth63MessageCode.NodeData;
         public override string Protocol { get; } = "eth";
 
-        public NodeDataMessage(byte[][] data)
+        public NodeDataMessage(byte[][]? data)
         {
             Data = data ?? Array.Empty<byte[]>();
         }
         
-        public override string ToString() => $"{nameof(NodeDataMessage)}({Data?.Length ?? 0})";
+        public override string ToString() => $"{nameof(NodeDataMessage)}({Data.Length})";
     }
 }

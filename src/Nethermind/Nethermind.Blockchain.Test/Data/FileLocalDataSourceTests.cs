@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -113,6 +113,7 @@ namespace Nethermind.Blockchain.Test.Data
         
         [Test]
         [Retry(10)]
+        [Ignore("Causing repeated pains on GitHub actions.")]
         public async Task retries_loading_file()
         {
             using (var tempFile = TempPath.GetTempFile())

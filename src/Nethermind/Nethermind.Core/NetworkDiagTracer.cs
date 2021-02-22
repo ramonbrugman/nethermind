@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -31,23 +31,24 @@ namespace Nethermind.Core
     public static class NetworkDiagTracer
     {
         public const string NetworkDiagTracerPath = @"network_diag.txt";
-        
+
         public static bool IsEnabled { get; set; }
 
-        private static ConcurrentDictionary<string, List<string>> events = new ConcurrentDictionary<string, List<string>>();
+        private static readonly ConcurrentDictionary<string, ConcurrentQueue<string>> _events = new();
 
         public static void Start()
         {
-            Timer timer = new Timer();
+            Timer timer = new();
             timer.Interval = 60000;
-            timer.Elapsed += (sender, args) => DumpEvents(); 
+            timer.Elapsed += (_, _) => DumpEvents(); 
             timer.Start();
         }
 
         private static void DumpEvents()
         {
-            StringBuilder stringBuilder = new StringBuilder();
-            foreach (KeyValuePair<string,List<string>> keyValuePair in events)
+            StringBuilder stringBuilder = new();
+
+            foreach (KeyValuePair<string, ConcurrentQueue<string>> keyValuePair in _events)
             {
                 stringBuilder.AppendLine(keyValuePair.Key);
                 foreach (string s in keyValuePair.Value)
@@ -60,15 +61,15 @@ namespace Nethermind.Core
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
-        private static void Add(IPEndPoint farAddress, string line)
+        private static void Add(IPEndPoint? farAddress, string line)
         {
-            events.AddOrUpdate(farAddress.Address.MapToIPv4().ToString(), ni => new List<string>(), (s, list) =>
+            _events.AddOrUpdate(farAddress?.Address.MapToIPv4().ToString() ?? "null", ni => new ConcurrentQueue<string>(), (s, list) =>
             {
-                list.Add(line);
+                list.Enqueue(line);
                 return list;
             });
         }
-        
+
         public static void ReportOutgoingMessage(IPEndPoint nodeInfo, string protocol, string messageCode)
         {
             if(!IsEnabled) return;

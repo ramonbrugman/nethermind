@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -16,10 +16,8 @@
 
 using System;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Nethermind.Abi;
 using Nethermind.Core.Extensions;
-using Nethermind.Crypto;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

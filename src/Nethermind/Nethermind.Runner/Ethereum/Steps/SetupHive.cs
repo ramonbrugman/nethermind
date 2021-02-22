@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -40,13 +40,14 @@ namespace Nethermind.Runner.Ethereum.Steps
             {
                 if (_api.BlockTree == null) throw new StepDependencyException(nameof(_api.BlockTree));
 
-                HiveRunner hiveRunner = new HiveRunner(
+                HiveRunner hiveRunner = new(
                     _api.BlockTree,
                     _api.EthereumJsonSerializer,
                     _api.ConfigProvider,
                     _api.LogManager.GetClassLogger(),
                     _api.FileSystem
                 );
+                
                 await hiveRunner.Start(cancellationToken);
             }
         }

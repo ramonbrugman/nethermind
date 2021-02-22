@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -15,6 +15,7 @@
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 // 
 
+using System;
 using System.Linq;
 using FluentAssertions;
 using Nethermind.Consensus;
@@ -50,13 +51,13 @@ namespace Nethermind.AuRa.Test.Transactions
             stateReader.GetNonce(blockHeader.StateRoot, nodeAddress).Returns(expectedNonce);
             
             ulong expectedTimeStamp = 100;
-            timestamper.EpochSeconds.Returns(expectedTimeStamp);
+            timestamper.UnixTime.Returns(UnixTime.FromSeconds(expectedTimeStamp));
 
             var gasLimit = 200;
             var innerTxSource = Substitute.For<ITxSource>();
             innerTxSource.GetTransactions(blockHeader, gasLimit).Returns(new[] {tx1, tx2});
             
-            TxSealer txSealer = new TxSealer(new Signer(chainId, Build.A.PrivateKey.TestObject, LimboLogs.Instance), timestamper);
+            TxSealer txSealer = new TxSealer(new Signer((ulong) chainId, Build.A.PrivateKey.TestObject, LimboLogs.Instance), timestamper);
             var transactionFiller = new GeneratedTxSource(innerTxSource, txSealer, stateReader, LimboLogs.Instance);
 
             var sealedTxs = transactionFiller.GetTransactions(blockHeader, gasLimit).ToArray();

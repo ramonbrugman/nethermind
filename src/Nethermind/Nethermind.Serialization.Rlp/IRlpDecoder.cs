@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -19,18 +19,25 @@ namespace Nethermind.Serialization.Rlp
     public interface IRlpDecoder
     {
     }
-    
-    public interface IRlpDecoder<T> : IRlpDecoder
+
+    public interface IRlpDecoder<in T> : IRlpDecoder
     {
-        T Decode(RlpStream rlpStream, RlpBehaviors rlpBehaviors = RlpBehaviors.None);
-        Rlp Encode(T item, RlpBehaviors rlpBehaviors = RlpBehaviors.None);
         int GetLength(T item, RlpBehaviors rlpBehaviors);
     }
     
-    public interface IRlpValueDecoder<T> : IRlpDecoder
+    public interface IRlpStreamDecoder<T> : IRlpDecoder<T>
+    {
+        T Decode(RlpStream rlpStream, RlpBehaviors rlpBehaviors = RlpBehaviors.None);
+        void Encode(RlpStream stream, T item, RlpBehaviors rlpBehaviors = RlpBehaviors.None);
+    }
+    
+    public interface IRlpObjectDecoder<in T> : IRlpDecoder<T>
+    {
+        Rlp Encode(T? item, RlpBehaviors rlpBehaviors = RlpBehaviors.None);
+    }
+    
+    public interface IRlpValueDecoder<T> : IRlpObjectDecoder<T>
     {
         T Decode(ref Rlp.ValueDecoderContext decoderContext, RlpBehaviors rlpBehaviors = RlpBehaviors.None);
-        Rlp Encode(T item, RlpBehaviors rlpBehaviors = RlpBehaviors.None);
-        int GetLength(T item, RlpBehaviors rlpBehaviors);
     }
 }

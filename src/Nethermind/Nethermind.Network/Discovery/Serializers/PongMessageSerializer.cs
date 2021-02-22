@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@ namespace Nethermind.Network.Discovery.Serializers
             rlp.ReadSequenceLength();
 
             // GetAddress(rlp.DecodeByteArray(), rlp.DecodeInt());
-            rlp.DecodeByteArray();
+            rlp.DecodeByteArraySpan();
             rlp.DecodeInt(); // UDP port (we ignore and take it from Netty)
             rlp.DecodeInt(); // TCP port
             byte[] token = rlp.DecodeByteArray();

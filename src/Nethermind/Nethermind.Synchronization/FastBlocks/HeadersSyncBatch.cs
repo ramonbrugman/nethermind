@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ namespace Nethermind.Synchronization.FastBlocks
         public long StartNumber { get; set; }
         public long EndNumber => StartNumber + RequestSize - 1;
         public int RequestSize { get; set; }
-        public BlockHeader[]? Response { get; set; }
+        public BlockHeader?[]? Response { get; set; }
 
         public override string ToString()
         {

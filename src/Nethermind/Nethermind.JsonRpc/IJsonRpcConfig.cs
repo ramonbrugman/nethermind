@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -84,5 +84,10 @@ namespace Nethermind.JsonRpc
             Description = "A path to a file that contains a list of new-line separated approved JSON RPC calls",
             DefaultValue = "Data/jsonrpc.filter")]
         string CallsFilterFilePath { get; set; }
+
+        [ConfigItem(
+            Description = "Max HTTP request body size",
+            DefaultValue = "30000000")]
+        long? MaxRequestBodySize { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -36,13 +36,14 @@ namespace Nethermind.TxPool
         public FilteredTxPool(
             ITxStorage txStorage, 
             IEthereumEcdsa ecdsa, 
-            ISpecProvider specProvider, 
+            IChainHeadSpecProvider specProvider, 
             ITxPoolConfig txPoolConfig, 
             IReadOnlyStateProvider stateProvider,
+            ITxValidator txValidator,
             ILogManager logManager, 
             IComparer<Transaction> comparer = null,
             ITxPoolFilter txPoolFilter = null) 
-            : base(txStorage, ecdsa, specProvider, txPoolConfig, stateProvider, logManager, comparer)
+            : base(txStorage, ecdsa, specProvider, txPoolConfig, stateProvider, txValidator, logManager, comparer)
         {
             _txPoolFilter = txPoolFilter;
         }

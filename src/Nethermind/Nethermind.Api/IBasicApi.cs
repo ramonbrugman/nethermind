@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.IO.Abstractions;
 using Nethermind.Abi;
 using Nethermind.Api.Extensions;
+using Nethermind.Blockchain;
 using Nethermind.Config;
-using Nethermind.Consensus;
 using Nethermind.Core;
 using Nethermind.Core.Specs;
 using Nethermind.Crypto;
@@ -30,7 +30,6 @@ using Nethermind.Logging;
 using Nethermind.Serialization.Json;
 using Nethermind.Specs.ChainSpecStyle;
 using Nethermind.Synchronization.ParallelSync;
-using Nethermind.Wallet;
 
 namespace Nethermind.Api
 {
@@ -43,6 +42,8 @@ namespace Nethermind.Api
         IConfigProvider ConfigProvider { get; }
         ICryptoRandom CryptoRandom { get; }
         IDbProvider? DbProvider { get; set; }
+        IRocksDbFactory? RocksDbFactory { get; set; }
+        IMemDbFactory? MemDbFactory { get; set; }
         IEthereumEcdsa? EthereumEcdsa { get; set; }
         IJsonSerializer EthereumJsonSerializer { get; }
         IFileSystem FileSystem { get; set; }

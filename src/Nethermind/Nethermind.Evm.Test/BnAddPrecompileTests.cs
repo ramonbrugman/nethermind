@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -15,9 +15,9 @@
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 // 
 
-using FluentAssertions;
 using Nethermind.Core.Extensions;
 using Nethermind.Evm.Precompiles;
+using Nethermind.Specs.Forks;
 using NUnit.Framework;
 
 namespace Nethermind.Evm.Test
@@ -45,7 +45,7 @@ namespace Nethermind.Evm.Test
             for (int i = 0; i < inputs.Length; i++)
             {
                 IPrecompile shamatar = Precompiles.Snarks.Shamatar.Bn256AddPrecompile.Instance;
-                (byte[], bool) resultShamatar = shamatar.Run(inputs[i]);
+                (byte[], bool) resultShamatar = shamatar.Run(inputs[i], MuirGlacier.Instance);
             }
         }
     }

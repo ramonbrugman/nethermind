@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -23,11 +23,7 @@ namespace Nethermind.Network.P2P.Subprotocols.Eth.V62
         public override int PacketType { get; } = Eth62MessageCode.NewBlockHashes;
         public override string Protocol { get; } = "eth";
 
-        public (Keccak, long)[] BlockHashes { get; set; }
-
-        public NewBlockHashesMessage()
-        {
-        }
+        public (Keccak, long)[] BlockHashes { get; }
 
         public NewBlockHashesMessage(params (Keccak, long)[] blockHashes)
         {

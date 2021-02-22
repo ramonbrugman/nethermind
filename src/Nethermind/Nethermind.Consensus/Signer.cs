@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -28,22 +28,22 @@ namespace Nethermind.Consensus
 {
     public class Signer : ISigner, ISignerStore
     {
-        private readonly int _chainId;
-        private ProtectedPrivateKey _key;
-        private ILogger _logger;
+        private readonly ulong _chainId;
+        private ProtectedPrivateKey? _key;
+        private readonly ILogger _logger;
 
         public Address Address => _key?.Address ?? Address.Zero;
 
         public bool CanSign => _key != null;
 
-        public Signer(int chainId, PrivateKey key, ILogManager logManager)
+        public Signer(ulong chainId, PrivateKey key, ILogManager logManager)
         {
             _chainId = chainId;
             _logger = logManager?.GetClassLogger<Signer>() ?? throw new ArgumentNullException(nameof(logManager));
             SetSigner(key);
         }
         
-        public Signer(int chainId, ProtectedPrivateKey key, ILogManager logManager)
+        public Signer(ulong chainId, ProtectedPrivateKey key, ILogManager logManager)
         {
             _chainId = chainId;
             _logger = logManager?.GetClassLogger<Signer>() ?? throw new ArgumentNullException(nameof(logManager));
@@ -54,8 +54,8 @@ namespace Nethermind.Consensus
         {
             if (!CanSign) throw new InvalidOperationException("Cannot sign without provided key.");
             
-            using var key = _key.Unprotect();
-            var rs = Proxy.SignCompact(message.Bytes, key.KeyBytes, out int v);
+            using PrivateKey key = _key!.Unprotect();
+            byte[] rs = Proxy.SignCompact(message.Bytes, key.KeyBytes, out int v);
             return new Signature(rs, v);
         }
 
@@ -67,12 +67,14 @@ namespace Nethermind.Consensus
             return default;
         }
 
-        public void SetSigner(PrivateKey key)
+        public ProtectedPrivateKey Key => _key; 
+
+        public void SetSigner(PrivateKey? key)
         {
-            SetSigner(key == null ? null : new ProtectedPrivateKey(key));
+            SetSigner(key is null ? null : new ProtectedPrivateKey(key));
         }
 
-        public void SetSigner(ProtectedPrivateKey key)
+        public void SetSigner(ProtectedPrivateKey? key)
         {
             _key = key;
             if (_logger.IsInfo) _logger.Info(

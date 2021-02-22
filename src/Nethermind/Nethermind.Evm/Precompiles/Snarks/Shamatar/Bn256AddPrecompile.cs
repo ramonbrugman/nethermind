@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -16,7 +16,6 @@
 
 using System;
 using Nethermind.Core;
-using Nethermind.Core.Extensions;
 using Nethermind.Core.Specs;
 using Nethermind.Crypto.Bls;
 
@@ -41,7 +40,7 @@ namespace Nethermind.Evm.Precompiles.Snarks.Shamatar
             return 0L;
         }
 
-        public unsafe (byte[], bool) Run(byte[] inputData)
+        public unsafe (byte[], bool) Run(byte[] inputData, IReleaseSpec releaseSpec)
         {
             Metrics.Bn256AddPrecompile++;
             Span<byte> inputDataSpan = stackalloc byte[128];

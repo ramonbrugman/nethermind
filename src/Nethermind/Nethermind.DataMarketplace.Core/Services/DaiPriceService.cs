@@ -28,14 +28,14 @@ namespace Nethermind.DataMarketplace.Core.Services
         }
         public async Task UpdateAsync()
         {
-            var currentTime = _timestamper.EpochSeconds;
+            var currentTime = _timestamper.UnixTime.Seconds;
             if (currentTime < UpdatedAt + 1)
             {
                 return;
             }
 
             var results = await _httpClient.GetAsync<Dictionary<string, Result>>(Url);
-            if (!results.ContainsKey("USDT_DAI"))
+            if (results is null || !results.ContainsKey("USDT_DAI"))
             {
                 if (_logger.IsWarn) _logger.Warn($"There was an error when updating DAI price. Latest know value is: {UsdPrice} USD");
                 return;

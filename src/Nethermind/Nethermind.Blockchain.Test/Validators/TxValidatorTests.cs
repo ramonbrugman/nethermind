@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -14,7 +14,6 @@
 //  You should have received a copy of the GNU Lesser General Public License
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 
-using System;
 using FluentAssertions;
 using Nethermind.Blockchain.Validators;
 using Nethermind.Core.Crypto;
@@ -32,12 +31,6 @@ namespace Nethermind.Blockchain.Test.Validators
         [SetUp]
         public void Setup()
         {
-        }
-        
-        [Test]
-        public void Chain_id_has_to_be_non_negative()
-        {
-            Assert.Throws<ArgumentException>(() => _ = new TxValidator(-1));
         }
 
         [Test]

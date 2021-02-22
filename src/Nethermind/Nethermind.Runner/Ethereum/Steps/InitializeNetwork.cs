@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -36,6 +36,7 @@ using Nethermind.Network.P2P.Subprotocols.Eth.V63;
 using Nethermind.Network.Rlpx;
 using Nethermind.Network.Rlpx.Handshake;
 using Nethermind.Network.StaticNodes;
+using Nethermind.Stats.Model;
 using Nethermind.Synchronization;
 using Nethermind.Synchronization.LesSync;
 using Nethermind.Synchronization.ParallelSync;
@@ -48,10 +49,10 @@ namespace Nethermind.Runner.Ethereum.Steps
         // Environment.SetEnvironmentVariable("io.netty.allocator.pageSize", "8192");
         private const uint PageSize = 8192;
         
-        public static ulong Estimate(uint cpuCount, int arenaOrder)
+        public static long Estimate(uint cpuCount, int arenaOrder)
         {
             // do not remember why there is 2 in front
-            return 2UL * cpuCount * (1UL << arenaOrder) * PageSize;
+            return 2L * cpuCount * (1L << arenaOrder) * PageSize;
         }
     }
 
@@ -67,7 +68,6 @@ namespace Nethermind.Runner.Ethereum.Steps
     {
         private const string DiscoveryNodesDbPath = "discoveryNodes";
         private const string PeersDbPath = "peers";
-        private const string ChtDbPath = "canonicalHashTrie";
 
         protected readonly IApiWithNetwork _api;
         private readonly ILogger _logger;
@@ -92,9 +92,13 @@ namespace Nethermind.Runner.Ethereum.Steps
             if (_networkConfig.DiagTracerEnabled)
             {
                 NetworkDiagTracer.IsEnabled = true;
+            }
+
+            if (NetworkDiagTracer.IsEnabled)
+            {
                 NetworkDiagTracer.Start();
             }
-            
+
             Environment.SetEnvironmentVariable("io.netty.allocator.maxOrder", _networkConfig.NettyArenaOrder.ToString());
 
             var cht = new CanonicalHashTrie(_api.DbProvider!.ChtDb);
@@ -103,7 +107,15 @@ namespace Nethermind.Runner.Ethereum.Steps
             _api.SyncPeerPool = new SyncPeerPool(_api.BlockTree!, _api.NodeStatsManager!, maxPeersCount, _api.LogManager);
             _api.DisposeStack.Push(_api.SyncPeerPool);
 
-            SyncProgressResolver syncProgressResolver = new SyncProgressResolver(_api.BlockTree!, _api.ReceiptStorage!, _api.DbProvider.StateDb, _api.DbProvider.BeamStateDb, _syncConfig, _api.LogManager);
+            SyncProgressResolver syncProgressResolver = new(
+                _api.BlockTree!,
+                _api.ReceiptStorage!,
+                _api.DbProvider.StateDb,
+                _api.DbProvider.BeamTempDb,
+                _api.ReadOnlyTrieStore!,
+                _syncConfig,
+                _api.LogManager);
+            
             MultiSyncModeSelector syncModeSelector = CreateMultiSyncModeSelector(syncProgressResolver);
             if (_api.SyncModeSelector != null)
             {
@@ -139,6 +151,7 @@ namespace Nethermind.Runner.Ethereum.Steps
                 _api.SyncPeerPool,
                 _api.SyncModeSelector,
                 _api.Config<ISyncConfig>(),
+                _api.WitnessCollector,
                 _api.LogManager,
                 cht);
 
@@ -204,7 +217,7 @@ namespace Nethermind.Runner.Ethereum.Steps
             {
                 throw new InvalidOperationException("Cannot initialize network without knowing own enode");
             }
-            
+
             ThisNodeInfo.AddInfo("Ethereum     :", $"tcp://{_api.Enode.HostIp}:{_api.Enode.Port}");
             ThisNodeInfo.AddInfo("Version      :", $"{ClientVersion.Description.Replace("Nethermind/v", string.Empty)}");
             ThisNodeInfo.AddInfo("This node    :", $"{_api.Enode.Info}");
@@ -212,7 +225,7 @@ namespace Nethermind.Runner.Ethereum.Steps
         }
 
         protected virtual MultiSyncModeSelector CreateMultiSyncModeSelector(SyncProgressResolver syncProgressResolver)
-            => new MultiSyncModeSelector(syncProgressResolver, _api.SyncPeerPool!, _syncConfig, _api.LogManager);
+            => new(syncProgressResolver, _api.SyncPeerPool!, _syncConfig, _api.LogManager);
 
         private Task StartDiscovery()
         {
@@ -261,10 +274,10 @@ namespace Nethermind.Runner.Ethereum.Steps
 
             IDiscoveryConfig discoveryConfig = _api.Config<IDiscoveryConfig>();
 
-            SameKeyGenerator privateKeyProvider = new SameKeyGenerator(_api.NodeKey.Unprotect());
-            DiscoveryMessageFactory discoveryMessageFactory = new DiscoveryMessageFactory(_api.Timestamper);
-            NodeIdResolver nodeIdResolver = new NodeIdResolver(_api.EthereumEcdsa);
-            IPResolver ipResolver = new IPResolver(_networkConfig, _api.LogManager);
+            SameKeyGenerator privateKeyProvider = new(_api.NodeKey.Unprotect());
+            DiscoveryMessageFactory discoveryMessageFactory = new(_api.Timestamper);
+            NodeIdResolver nodeIdResolver = new(_api.EthereumEcdsa);
+            IPResolver ipResolver = new(_networkConfig, _api.LogManager);
 
             IDiscoveryMsgSerializersProvider msgSerializersProvider = new DiscoveryMsgSerializersProvider(
                 _api.MessageSerializationService,
@@ -275,12 +288,12 @@ namespace Nethermind.Runner.Ethereum.Steps
 
             msgSerializersProvider.RegisterDiscoverySerializers();
 
-            NodeDistanceCalculator nodeDistanceCalculator = new NodeDistanceCalculator(discoveryConfig);
+            NodeDistanceCalculator nodeDistanceCalculator = new(discoveryConfig);
 
-            NodeTable nodeTable = new NodeTable(nodeDistanceCalculator, discoveryConfig, _networkConfig, _api.LogManager);
-            EvictionManager evictionManager = new EvictionManager(nodeTable, _api.LogManager);
+            NodeTable nodeTable = new(nodeDistanceCalculator, discoveryConfig, _networkConfig, _api.LogManager);
+            EvictionManager evictionManager = new(nodeTable, _api.LogManager);
 
-            NodeLifecycleManagerFactory nodeLifeCycleFactory = new NodeLifecycleManagerFactory(
+            NodeLifecycleManagerFactory nodeLifeCycleFactory = new(
                 nodeTable,
                 discoveryMessageFactory,
                 evictionManager,
@@ -288,12 +301,17 @@ namespace Nethermind.Runner.Ethereum.Steps
                 discoveryConfig,
                 _api.LogManager);
 
-            SimpleFilePublicKeyDb discoveryDb = new SimpleFilePublicKeyDb("DiscoveryDB", DiscoveryNodesDbPath.GetApplicationResourcePath(_api.Config<IInitConfig>().BaseDbPath), _api.LogManager);
-            NetworkStorage discoveryStorage = new NetworkStorage(
+            // ToDo: DiscoveryDB is registered outside dbProvider - bad
+            SimpleFilePublicKeyDb discoveryDb = new(
+                "DiscoveryDB",
+                DiscoveryNodesDbPath.GetApplicationResourcePath(_api.Config<IInitConfig>().BaseDbPath),
+                _api.LogManager);
+            
+            NetworkStorage discoveryStorage = new(
                 discoveryDb,
                 _api.LogManager);
 
-            DiscoveryManager discoveryManager = new DiscoveryManager(
+            DiscoveryManager discoveryManager = new(
                 nodeLifeCycleFactory,
                 nodeTable,
                 discoveryStorage,
@@ -302,7 +320,7 @@ namespace Nethermind.Runner.Ethereum.Steps
                 ipResolver
             );
 
-            NodesLocator nodesLocator = new NodesLocator(
+            NodesLocator nodesLocator = new(
                 nodeTable,
                 discoveryManager,
                 discoveryConfig,
@@ -363,42 +381,68 @@ namespace Nethermind.Runner.Ethereum.Steps
             if (_api.EthereumJsonSerializer == null) throw new StepDependencyException(nameof(_api.EthereumJsonSerializer));
 
             /* rlpx */
-            EciesCipher eciesCipher = new EciesCipher(_api.CryptoRandom);
-            Eip8MessagePad eip8Pad = new Eip8MessagePad(_api.CryptoRandom);
+            EciesCipher eciesCipher = new(_api.CryptoRandom);
+            Eip8MessagePad eip8Pad = new(_api.CryptoRandom);
             _api.MessageSerializationService.Register(new AuthEip8MessageSerializer(eip8Pad));
             _api.MessageSerializationService.Register(new AckEip8MessageSerializer(eip8Pad));
             _api.MessageSerializationService.Register(Assembly.GetAssembly(typeof(HelloMessageSerializer)));
             _api.MessageSerializationService.Register(new ReceiptsMessageSerializer(_api.SpecProvider));
 
-            HandshakeService encryptionHandshakeServiceA = new HandshakeService(_api.MessageSerializationService, eciesCipher,
-                _api.CryptoRandom, new Ecdsa(), _api.NodeKey.Unprotect(), _api.LogManager);
+            HandshakeService encryptionHandshakeServiceA = new(
+                _api.MessageSerializationService,
+                eciesCipher,
+                _api.CryptoRandom,
+                _api.EthereumEcdsa,
+                _api.NodeKey.Unprotect(),
+                _api.LogManager);
 
             IDiscoveryConfig discoveryConfig = _api.Config<IDiscoveryConfig>();
             IInitConfig initConfig = _api.Config<IInitConfig>();
 
+            // _api.DisconnectsAnalyzer = new DisconnectsAnalyzer(_api.LogManager);
+            _api.DisconnectsAnalyzer = new MetricsDisconnectsAnalyzer();
             _api.SessionMonitor = new SessionMonitor(_networkConfig, _api.LogManager);
             _api.RlpxPeer = new RlpxPeer(
                 _api.MessageSerializationService,
                 _api.NodeKey.PublicKey,
                 _networkConfig.P2PPort,
                 encryptionHandshakeServiceA,
-                _api.LogManager,
-                _api.SessionMonitor);
+                _api.SessionMonitor,
+                _api.DisconnectsAnalyzer,
+                _api.LogManager);
 
             await _api.RlpxPeer.Init();
 
             _api.StaticNodesManager = new StaticNodesManager(initConfig.StaticNodesPath, _api.LogManager);
             await _api.StaticNodesManager.InitAsync();
 
+            // ToDo: PeersDB is register outside dbProvider - bad
             var dbName = "PeersDB";
             IFullDb peersDb = initConfig.DiagnosticMode == DiagnosticMode.MemDb
                 ? (IFullDb) new MemDb(dbName)
                 : new SimpleFilePublicKeyDb(dbName, PeersDbPath.GetApplicationResourcePath(initConfig.BaseDbPath), _api.LogManager);
 
-            NetworkStorage peerStorage = new NetworkStorage(peersDb, _api.LogManager);
+            NetworkStorage peerStorage = new(peersDb, _api.LogManager);
 
-            ProtocolValidator protocolValidator = new ProtocolValidator(_api.NodeStatsManager, _api.BlockTree, _api.LogManager);
-            _api.ProtocolsManager = new ProtocolsManager(_api.SyncPeerPool, _api.SyncServer, _api.TxPool, _api.DiscoveryApp, _api.MessageSerializationService, _api.RlpxPeer, _api.NodeStatsManager, protocolValidator, peerStorage, _api.SpecProvider, _api.LogManager);
+            ProtocolValidator protocolValidator = new(_api.NodeStatsManager, _api.BlockTree, _api.LogManager);
+            _api.ProtocolsManager = new ProtocolsManager(
+                _api.SyncPeerPool,
+                _api.SyncServer,
+                _api.TxPool,
+                _api.DiscoveryApp,
+                _api.MessageSerializationService,
+                _api.RlpxPeer,
+                _api.NodeStatsManager,
+                protocolValidator,
+                peerStorage,
+                _api.SpecProvider,
+                _api.LogManager);
+            
+            if (_syncConfig.WitnessProtocolEnabled)
+            {
+                _api.ProtocolsManager.AddSupportedCapability(new Capability(Protocol.Wit, 0));
+            }
+            
             _api.ProtocolValidator = protocolValidator;
 
             foreach (var plugin in _api.Plugins)
@@ -406,8 +450,17 @@ namespace Nethermind.Runner.Ethereum.Steps
                 await plugin.InitNetworkProtocol();
             }
 
-            PeerLoader peerLoader = new PeerLoader(_networkConfig, discoveryConfig, _api.NodeStatsManager, peerStorage, _api.LogManager);
-            _api.PeerManager = new PeerManager(_api.RlpxPeer, _api.DiscoveryApp, _api.NodeStatsManager, peerStorage, peerLoader, _networkConfig, _api.LogManager, _api.StaticNodesManager);
+            PeerLoader peerLoader = new(_networkConfig, discoveryConfig, _api.NodeStatsManager, peerStorage, _api.LogManager);
+            _api.PeerManager = new PeerManager(
+                _api.RlpxPeer,
+                _api.DiscoveryApp,
+                _api.NodeStatsManager,
+                peerStorage,
+                peerLoader,
+                _networkConfig,
+                _api.LogManager,
+                _api.StaticNodesManager);
+            
             _api.PeerManager.Init();
         }
     }

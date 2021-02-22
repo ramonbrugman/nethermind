@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -150,7 +150,7 @@ namespace Nethermind.Wallet.Test
         }
 
         [Test]
-        public void Can_sign_on_networks_with_chain_id([ValueSource(nameof(WalletTypes))] WalletType walletType, [Values(0, 1, 40000)] int chainId)
+        public void Can_sign_on_networks_with_chain_id([ValueSource(nameof(WalletTypes))] WalletType walletType, [Values(0ul, 1ul, 40000ul, ulong.MaxValue / 3)] ulong chainId)
         {
             EthereumEcdsa ecdsa = new EthereumEcdsa(chainId, LimboLogs.Instance);
             Context ctx = _cachedWallets[walletType];
@@ -160,7 +160,7 @@ namespace Nethermind.Wallet.Test
                 Transaction tx = new Transaction();
                 tx.SenderAddress = signerAddress;
 
-                ctx.Wallet.Sign(tx, chainId);
+                WalletExtensions.Sign(ctx.Wallet, tx, chainId);
                 Address recovered = ecdsa.RecoverAddress(tx);
                 Assert.AreEqual(signerAddress, recovered, $"{i}");
                 Console.WriteLine(tx.Signature);

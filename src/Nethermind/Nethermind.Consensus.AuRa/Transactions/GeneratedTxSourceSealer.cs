@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -55,9 +55,9 @@ namespace Nethermind.Consensus.AuRa.Transactions
                     if (tx is GeneratedTransaction)
                     {
                         tx.Nonce = CalculateNonce(tx.SenderAddress, parent.StateRoot, _nonces);
-                        _txSealer.Seal(tx, TxHandlingOptions.None);
+                        _txSealer.Seal(tx, TxHandlingOptions.ManagedNonce | TxHandlingOptions.AllowReplacingSignature);
                         Metrics.SealedTransactions++;
-                        if (_logger.IsDebug) _logger.Debug($"Sealed node generated transaction {tx.Hash} from {tx.SenderAddress} to {tx.To} with nonce {tx.Nonce}.");
+                        if (_logger.IsDebug) _logger.Debug($"Sealed node generated transaction {tx.ToShortString()}");
                     }
 
                     return tx;

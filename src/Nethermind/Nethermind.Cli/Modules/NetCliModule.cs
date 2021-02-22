@@ -1,4 +1,4 @@
-//  Copyright (c) 2018 Demerzel Solutions Limited
+//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@ namespace Nethermind.Cli.Modules
     public class NetCliModule : CliModuleBase
     {   
         [CliProperty("net", "localEnode")]
-        public string LocalEnode() => NodeManager.Post<string>("net_localEnode").Result;
+        public string? LocalEnode() => NodeManager.Post<string>("net_localEnode").Result;
 
         [CliProperty("net", "version")]
         public JsValue Version() => NodeManager.PostJint("net_version").Result;

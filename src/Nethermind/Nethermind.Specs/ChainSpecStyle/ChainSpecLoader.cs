@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -26,6 +26,7 @@ using Nethermind.Core.Crypto;
 using Nethermind.Int256;
 using Nethermind.Serialization.Json;
 using Nethermind.Specs.ChainSpecStyle.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Nethermind.Specs.ChainSpecStyle
 {
@@ -51,7 +52,7 @@ namespace Nethermind.Specs.ChainSpecStyle
                 var chainSpecJson = _serializer.Deserialize<ChainSpecJson>(jsonData);
                 var chainSpec = new ChainSpec();
 
-                chainSpec.ChainId = (int) chainSpecJson.Params.NetworkId;
+                chainSpec.ChainId = chainSpecJson.Params.NetworkId;
                 chainSpec.Name = chainSpecJson.Name;
                 chainSpec.DataDir = chainSpecJson.DataDir;
                 LoadGenesis(chainSpecJson, chainSpec);
@@ -71,6 +72,21 @@ namespace Nethermind.Specs.ChainSpecStyle
 
         private void LoadParameters(ChainSpecJson chainSpecJson, ChainSpec chainSpec)
         {
+            long? GetTransitionForExpectedPricing(string builtInName, string innerPath, long expectedValue)
+            {
+                var allocation = chainSpecJson.Accounts.Values.FirstOrDefault(v => v.BuiltIn?.Name.Equals(builtInName, StringComparison.InvariantCultureIgnoreCase) == true);
+                if (allocation != null)
+                {
+                    var pricing = allocation.BuiltIn.Pricing.Where(o => o.Value.SelectToken(innerPath)?.Value<long>() == expectedValue).ToArray();
+                    if (pricing.Length > 0)
+                    {
+                        return long.Parse(pricing[0].Key);
+                    }
+                }
+
+                return null;
+            }
+
             ValidateParams(chainSpecJson.Params);
 
             chainSpec.Parameters = new ChainParameters
@@ -84,6 +100,7 @@ namespace Nethermind.Specs.ChainSpecStyle
                 Registrar = chainSpecJson.Params.EnsRegistrar,
                 ForkBlock = chainSpecJson.Params.ForkBlock,
                 ForkCanonHash = chainSpecJson.Params.ForkCanonHash,
+                Eip7Transition = chainSpecJson.Params.Eip7Transition,
                 Eip150Transition = chainSpecJson.Params.Eip150Transition ?? 0,
                 Eip152Transition = chainSpecJson.Params.Eip152Transition,
                 Eip160Transition = chainSpecJson.Params.Eip160Transition ?? 0,
@@ -106,11 +123,24 @@ namespace Nethermind.Specs.ChainSpecStyle
                 Eip1884Transition = chainSpecJson.Params.Eip1884Transition,
                 Eip2028Transition = chainSpecJson.Params.Eip2028Transition,
                 Eip2200Transition = chainSpecJson.Params.Eip2200Transition,
+                Eip1559Transition = chainSpecJson.Params.Eip1559Transition,
+                Eip1559MigrationDuration = chainSpecJson.Params.Eip1559MigrationDuration,
+                Eip2315Transition = chainSpecJson.Params.Eip2315Transition,
+                Eip2537Transition = chainSpecJson.Params.Eip2537Transition,
+                Eip2565Transition = chainSpecJson.Params.Eip2565Transition,
+                Eip2718Transition = chainSpecJson.Params.Eip2718Transition,
+                Eip2929Transition = chainSpecJson.Params.Eip2929Transition,
+                Eip2930Transition = chainSpecJson.Params.Eip2930Transition,
                 TransactionPermissionContract = chainSpecJson.Params.TransactionPermissionContract,
                 TransactionPermissionContractTransition = chainSpecJson.Params.TransactionPermissionContractTransition,
                 ValidateChainIdTransition = chainSpecJson.Params.ValidateChainIdTransition,
                 ValidateReceiptsTransition = chainSpecJson.Params.ValidateReceiptsTransition,
             };
+
+            chainSpec.Parameters.Eip152Transition ??= GetTransitionForExpectedPricing("blake2_f", "price.blake2_f.gas_per_round", 1);
+            chainSpec.Parameters.Eip1108Transition ??= GetTransitionForExpectedPricing("alt_bn128_add", "price.alt_bn128_const_operations.price", 150)
+                                                       ?? GetTransitionForExpectedPricing("alt_bn128_mul", "price.alt_bn128_const_operations.price", 6000)
+                                                       ?? GetTransitionForExpectedPricing("alt_bn128_pairing", "price.alt_bn128_pairing.base", 45000);
         }
 
         private static void ValidateParams(ChainSpecParamsJson parameters)
@@ -133,7 +163,7 @@ namespace Nethermind.Specs.ChainSpecStyle
             if (chainSpecJson.Engine?.Ethash != null)
             {
                 chainSpec.HomesteadBlockNumber = chainSpecJson.Engine.Ethash.HomesteadTransition;
-                chainSpec.DaoForkBlockNumber = chainSpecJson.Engine.Ethash.DaoHardForkTransition;
+                chainSpec.DaoForkBlockNumber = chainSpecJson.Engine.Ethash.DaoHardforkTransition;
             }
             else
             {
@@ -160,8 +190,8 @@ namespace Nethermind.Specs.ChainSpecStyle
         {
             AuRaParameters.Validator LoadValidator(ChainSpecJson.AuRaValidatorJson validatorJson, int level = 0)
             {
-                var validatorType = validatorJson.GetValidatorType();
-                var validator = new AuRaParameters.Validator() {ValidatorType = validatorType};
+                AuRaParameters.ValidatorType validatorType = validatorJson.GetValidatorType();
+                AuRaParameters.Validator validator = new() {ValidatorType = validatorType};
                 switch (validator.ValidatorType)
                 {
                     case AuRaParameters.ValidatorType.List:
@@ -230,6 +260,7 @@ namespace Nethermind.Specs.ChainSpecStyle
                     DaoHardforkBeneficiary = chainSpecJson.Engine.Ethash.DaoHardforkBeneficiary,
                     DaoHardforkAccounts = chainSpecJson.Engine.Ethash.DaoHardforkAccounts ?? Array.Empty<Address>(),
                     Eip100bTransition = chainSpecJson.Engine.Ethash.Eip100bTransition ?? 0L,
+                    FixedDifficulty = chainSpecJson.Engine.Ethash.FixedDifficulty,
                     BlockRewards = new Dictionary<long, UInt256>()
                 };
 
@@ -239,9 +270,12 @@ namespace Nethermind.Specs.ChainSpecStyle
                 }
 
                 chainSpec.Ethash.DifficultyBombDelays = new Dictionary<long, long>();
-                foreach (KeyValuePair<string, long> reward in chainSpecJson.Engine.Ethash.DifficultyBombDelays)
+                if (chainSpecJson.Engine.Ethash.DifficultyBombDelays != null)
                 {
-                    chainSpec.Ethash.DifficultyBombDelays.Add(LongConverter.FromString(reward.Key), reward.Value);
+                    foreach (KeyValuePair<string, long> reward in chainSpecJson.Engine.Ethash.DifficultyBombDelays)
+                    {
+                        chainSpec.Ethash.DifficultyBombDelays.Add(LongConverter.FromString(reward.Key), reward.Value);
+                    }
                 }
             }
             else if (chainSpecJson.Engine?.NethDev != null)
@@ -261,20 +295,20 @@ namespace Nethermind.Specs.ChainSpecStyle
                 return;
             }
 
-            var nonce = chainSpecJson.Genesis.Seal.Ethereum?.Nonce ?? 0;
-            var mixHash = chainSpecJson.Genesis.Seal.Ethereum?.MixHash ?? Keccak.Zero;
+            UInt256 nonce = chainSpecJson.Genesis.Seal.Ethereum?.Nonce ?? 0;
+            Keccak mixHash = chainSpecJson.Genesis.Seal.Ethereum?.MixHash ?? Keccak.Zero;
 
-            var auRaSignature = chainSpecJson.Genesis.Seal.AuthorityRound?.Signature;
-            var step = chainSpecJson.Genesis.Seal.AuthorityRound?.Step;
+            byte[] auRaSignature = chainSpecJson.Genesis.Seal.AuthorityRound?.Signature;
+            long? step = chainSpecJson.Genesis.Seal.AuthorityRound?.Step;
 
-            var parentHash = chainSpecJson.Genesis.ParentHash ?? Keccak.Zero;
-            var timestamp = chainSpecJson.Genesis.Timestamp;
-            var difficulty = chainSpecJson.Genesis.Difficulty;
-            var extraData = chainSpecJson.Genesis.ExtraData ?? Array.Empty<byte>();
-            var gasLimit = chainSpecJson.Genesis.GasLimit;
-            var beneficiary = chainSpecJson.Genesis.Author ?? Address.Zero;
+            Keccak parentHash = chainSpecJson.Genesis.ParentHash ?? Keccak.Zero;
+            UInt256 timestamp = chainSpecJson.Genesis.Timestamp;
+            UInt256 difficulty = chainSpecJson.Genesis.Difficulty;
+            byte[] extraData = chainSpecJson.Genesis.ExtraData ?? Array.Empty<byte>();
+            UInt256 gasLimit = chainSpecJson.Genesis.GasLimit;
+            Address beneficiary = chainSpecJson.Genesis.Author ?? Address.Zero;
 
-            BlockHeader genesisHeader = new BlockHeader(
+            BlockHeader genesisHeader = new(
                 parentHash,
                 Keccak.OfAnEmptySequenceRlp,
                 beneficiary,
@@ -286,8 +320,7 @@ namespace Nethermind.Specs.ChainSpecStyle
 
             genesisHeader.Author = beneficiary;
             genesisHeader.Hash = Keccak.Zero; // need to run the block to know the actual hash
-            genesisHeader.Bloom = new Bloom();
-            genesisHeader.GasUsed = 0;
+            genesisHeader.Bloom = Bloom.Empty;
             genesisHeader.MixHash = mixHash;
             genesisHeader.Nonce = (ulong) nonce;
             genesisHeader.ReceiptsRoot = Keccak.EmptyTreeHash;

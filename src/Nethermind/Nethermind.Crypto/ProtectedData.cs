@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -15,10 +15,8 @@
 //  along with the Nethermind. If not, see <http://www.gnu.org/licenses/>.
 // 
 
-using System;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using Nethermind.Core;
 
 namespace Nethermind.Crypto
 {
@@ -27,8 +25,8 @@ namespace Nethermind.Crypto
     {
         private interface IProtector
         {
-            byte[] Protect(byte[] userData, byte[] optionalEntropy, DataProtectionScope scope);
-            byte[] Unprotect(byte[] encryptedData, byte[] optionalEntropy, DataProtectionScope scope);
+            byte[] Protect(byte[] userData, byte[] optionalEntropy);
+            byte[] Unprotect(byte[] encryptedData, byte[] optionalEntropy);
         }
         
         private static readonly IProtector _protector = CreateProtector();
@@ -38,8 +36,8 @@ namespace Nethermind.Crypto
             return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? new DpapiWrapper() : (IProtector)new AspNetWrapper();
         }
 
-        protected static byte[] Protect(byte[] userData, byte[] optionalEntropy, DataProtectionScope scope) => _protector.Protect(userData, optionalEntropy, scope);
+        protected static byte[] Protect(byte[] userData, byte[] optionalEntropy) => _protector.Protect(userData, optionalEntropy);
 
-        protected static byte[] Unprotect(byte[] encryptedData, byte[] optionalEntropy, DataProtectionScope scope) => _protector.Unprotect(encryptedData, optionalEntropy, scope);
+        protected static byte[] Unprotect(byte[] encryptedData, byte[] optionalEntropy) => _protector.Unprotect(encryptedData, optionalEntropy);
     }
 }

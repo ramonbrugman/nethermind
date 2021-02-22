@@ -1,4 +1,4 @@
-﻿//  Copyright (c) 2018 Demerzel Solutions Limited
+﻿//  Copyright (c) 2021 Demerzel Solutions Limited
 //  This file is part of the Nethermind library.
 // 
 //  The Nethermind library is free software: you can redistribute it and/or modify
@@ -22,21 +22,19 @@ namespace Nethermind.Core.Test
     public class TransactionTests
     {
         [Test]
-        public void When_init_empty_and_data_not_empty_then_is_message_call()
+        public void When_to_not_empty_then_is_message_call()
         {
             Transaction transaction = new Transaction();
-            transaction.Init = null;
-            transaction.Data = new byte[0];
+            transaction.To = Address.Zero;
             Assert.True(transaction.IsMessageCall, nameof(Transaction.IsMessageCall));
             Assert.False(transaction.IsContractCreation, nameof(Transaction.IsContractCreation));
         }
 
         [Test]
-        public void When_init_not_empty_and_data_empty_then_is_message_call()
+        public void When_to_empty_then_is_message_call()
         {
             Transaction transaction = new Transaction();
-            transaction.Init = new byte[0];
-            transaction.Data = null;
+            transaction.To = null;
             Assert.False(transaction.IsMessageCall, nameof(Transaction.IsMessageCall));
             Assert.True(transaction.IsContractCreation, nameof(Transaction.IsContractCreation));
         }
