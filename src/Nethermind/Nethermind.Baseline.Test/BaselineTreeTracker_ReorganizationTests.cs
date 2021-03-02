@@ -56,6 +56,8 @@ namespace Nethermind.Baseline.Test
 
             var initBlocksCount = 4;
             var allBlocksCount = initBlocksCount + test.LeavesInBlocksCounts.Length;
+            
+            // Do reorg first
             testRpc.BlockProducer.BlockParent = testRpc.BlockTree.FindHeader(allBlocksCount);
             await testRpc.AddBlock(false);
             testRpc.BlockProducer.BlockParent = testRpc.BlockProducer.LastProducedBlock.Header;
