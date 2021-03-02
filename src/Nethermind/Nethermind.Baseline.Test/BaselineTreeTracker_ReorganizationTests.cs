@@ -57,13 +57,16 @@ namespace Nethermind.Baseline.Test
             var initBlocksCount = 4;
             var allBlocksCount = initBlocksCount + test.LeavesInBlocksCounts.Length;
             testRpc.BlockProducer.BlockParent = testRpc.BlockTree.FindHeader(allBlocksCount);
+            await testRpc.AddBlock(false);
+            testRpc.BlockProducer.BlockParent = testRpc.BlockProducer.LastProducedBlock.Header;
+            await testRpc.AddBlock();
+            testRpc.BlockProducer.BlockParent = null;
 
             nonce = 1L;
             nonce = await InsertLeafFromArray(test.LeavesInMiddleOfReorganization, nonce, testRpc, contract, address);
 
-            await testRpc.AddBlock(false);
-            testRpc.BlockProducer.BlockParent = testRpc.BlockProducer.LastProducedBlock.Header;
-
+            await testRpc.AddBlock();
+            
             await InsertLeafFromArray(test.LeavesInAfterReorganization, nonce, testRpc, contract, address);
 
             await testRpc.AddBlock();
